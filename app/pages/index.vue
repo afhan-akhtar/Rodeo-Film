@@ -47,10 +47,11 @@
           v-for="project in gridProjects" 
           v-show="project.image || project.video || project.poster"
           :key="`showcase-${project.id}-${project.gridX}-${project.gridY}`"
-          class="project-grid-item"
+          class="project-grid-item cursor-pointer"
           :style="getGridPosition(project.gridX, project.gridY)"
-          @mouseenter="handleGridVideoHover($event, project)"
-          @mouseleave="handleGridVideoLeave($event)"
+          @mouseenter="handleEnhancedHover($event, project)"
+          @mouseleave="handleEnhancedLeave($event, project)"
+          @click="handleProjectClick($event, project)"
         >
           <!-- Background Image/Video -->
           <div class="relative w-full h-full overflow-hidden group hexagon-content">
@@ -62,6 +63,7 @@
               muted
               loop
               playsinline
+              :ref="el => setVideoRef(el, project)"
             >
               <source :src="project.video" type="video/mp4">
               <!-- Fallback to poster image if video fails -->
@@ -69,14 +71,13 @@
             </video>
             <img
               v-else
-              :src="project.image"
+              :src="getCurrentImageSrc(project)"
               :alt="project.showcase_title"
               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             
             <!-- Overlay -->
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
             
           </div>
           
@@ -471,6 +472,40 @@
       </div>
     </Transition>
 
+    <!-- Enhanced Fullscreen Video Modal for Grid Projects -->
+    <Transition name="video-modal">
+      <div v-if="fullscreenVideo" class="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+        <!-- Video Container -->
+        <div class="relative w-full h-full flex items-center justify-center">
+          <video
+            :key="fullscreenVideo.id"
+            playsinline 
+            controls
+            autoplay
+            muted
+            loop
+            :poster="fullscreenVideo.poster"
+            class="max-w-full max-h-full"
+          >
+            <source :src="fullscreenVideo.video" type="video/mp4">
+          </video>
+        </div>
+        
+        <!-- Close Button -->
+        <button @click="closeFullscreenVideo" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2 hover:scale-110 transition-transform">
+          <div class="w-6 h-0.5 bg-white transform rotate-45 absolute"></div>
+          <div class="w-6 h-0.5 bg-white transform -rotate-45"></div>
+        </button>
+        
+        <!-- Project Info Overlay -->
+        <div class="absolute bottom-8 left-8 text-white">
+          <h3 class="text-4xl font-light tracking-wider">{{ fullscreenVideo.showcase_title }}</h3>
+          <p class="text-xl text-white/80 mt-2">{{ fullscreenVideo.client }}</p>
+          <p class="text-lg text-white/60 mt-1">{{ fullscreenVideo.category }} • Directed by {{ fullscreenVideo.director }}</p>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Navigation Instructions -->
     <!-- <div class="fixed bottom-6 left-6 z-40 text-white/50 text-sm font-medium tracking-wide">
       Drag or scroll to explore
@@ -498,6 +533,11 @@ const lastMouseY = ref(0)
 const lastTouchX = ref(0)
 const lastTouchY = ref(0)
 const scrollUpdateThrottle = ref(null)
+
+// Enhanced hover states for videos and images
+const hoveredProjects = ref(new Map()) // Track hovered projects and their animation states
+const fullscreenVideo = ref(null) // For fullscreen video modal
+const imageAnimations = ref(new Map()) // Track image animation intervals
 
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value
@@ -566,9 +606,7 @@ const handleProjectLeave = () => {
   currentHoveredProject.value = null
 }
 
-const handleProjectClick = (project) => {
-  currentPlayingProject.value = project
-}
+
 
 const handleAwardHover = async (award) => {
   currentHoveredAward.value = award
@@ -602,24 +640,127 @@ const closeFullVideo = () => {
   currentPlayingAward.value = null
 }
 
-// Grid video hover functions
-const handleGridVideoHover = (event, project) => {
+// Enhanced hover functions for videos and images
+const videoRefs = new Map()
+
+const setVideoRef = (el, project) => {
+  if (el) {
+    videoRefs.set(`${project.id}-${project.gridX}-${project.gridY}`, el)
+  }
+}
+
+const handleEnhancedHover = (event, project) => {
+  const projectKey = `${project.id}-${project.gridX}-${project.gridY}`
+  
   if (project.mediaType === 'video') {
-    const videoElement = event.currentTarget.querySelector('video')
+    // Handle video hover - play in background immediately
+    const videoElement = videoRefs.get(projectKey)
     if (videoElement) {
+      videoElement.muted = true // Ensure it's muted for autoplay
+      videoElement.currentTime = 0 // Start from beginning
       videoElement.play().catch(error => {
         console.log('Grid video play failed:', error)
       })
     }
+  } else if (project.mediaType === 'image' && project.images && project.images.length > 1) {
+    // Handle image hover - start animation cycling through images
+    const currentState = hoveredProjects.value.get(projectKey) || { currentImageIndex: 0 }
+    hoveredProjects.value.set(projectKey, { ...currentState, isHovered: true })
+    
+    // Clear any existing animation for this project
+    if (imageAnimations.value.has(projectKey)) {
+      clearInterval(imageAnimations.value.get(projectKey))
+    }
+    
+    // Start image cycling animation
+    const interval = setInterval(() => {
+      const state = hoveredProjects.value.get(projectKey)
+      if (state && state.isHovered) {
+        const newIndex = (state.currentImageIndex + 1) % project.images.length
+        hoveredProjects.value.set(projectKey, { ...state, currentImageIndex: newIndex })
+      }
+    }, 300) // Change image every 300ms
+    
+    imageAnimations.value.set(projectKey, interval)
   }
 }
 
-const handleGridVideoLeave = (event) => {
-  const videoElement = event.currentTarget.querySelector('video')
-  if (videoElement) {
-    videoElement.pause()
-    videoElement.currentTime = 0
+const handleEnhancedLeave = (event, project) => {
+  const projectKey = `${project.id}-${project.gridX}-${project.gridY}`
+  
+  if (project.mediaType === 'video') {
+    // Handle video leave - pause and reset
+    const videoElement = videoRefs.get(projectKey)
+    if (videoElement) {
+      videoElement.pause()
+      videoElement.currentTime = 0
+    }
+  } else if (project.mediaType === 'image' && project.images && project.images.length > 1) {
+    // Handle image leave - stop animation and reset to first image
+    const currentState = hoveredProjects.value.get(projectKey)
+    if (currentState) {
+      hoveredProjects.value.set(projectKey, { ...currentState, isHovered: false, currentImageIndex: 0 })
+    }
+    
+    // Clear animation interval
+    if (imageAnimations.value.has(projectKey)) {
+      clearInterval(imageAnimations.value.get(projectKey))
+      imageAnimations.value.delete(projectKey)
+    }
   }
+}
+
+const getCurrentImageSrc = (project) => {
+  const projectKey = `${project.id}-${project.gridX}-${project.gridY}`
+  const state = hoveredProjects.value.get(projectKey)
+  
+  if (project.images && project.images.length > 1 && state) {
+    return project.images[state.currentImageIndex] || project.image
+  }
+  
+  return project.image
+}
+
+const handleProjectClick = (eventOrProject, project) => {
+  // Handle both calling patterns:
+  // 1. From grid: handleProjectClick($event, project)
+  // 2. From gallery: handleProjectClick(project)
+  let actualEvent = null
+  let actualProject = null
+  
+  if (project) {
+    // Called with (event, project)
+    actualEvent = eventOrProject
+    actualProject = project
+  } else {
+    // Called with just (project)
+    actualProject = eventOrProject
+  }
+  
+  if (actualProject && actualProject.mediaType === 'video') {
+    // Open video in fullscreen modal
+    fullscreenVideo.value = actualProject
+    if (actualEvent) {
+      actualEvent.stopPropagation()
+    }
+  } else if (actualProject && actualProject.video) {
+    // For gallery projects that might not have mediaType but have video
+    fullscreenVideo.value = {
+      ...actualProject,
+      mediaType: 'video',
+      showcase_title: actualProject.title,
+      client: actualProject.client,
+      category: 'Video',
+      director: actualProject.director
+    }
+    if (actualEvent) {
+      actualEvent.stopPropagation()
+    }
+  }
+}
+
+const closeFullscreenVideo = () => {
+  fullscreenVideo.value = null
 }
 
 // Throttled scroll update for better performance
@@ -760,7 +901,13 @@ const projects = [
     category: 'Documentary',
     director: 'Hugo Kerr',
     mediaType: 'image',
-    image: 'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90'
+    image: 'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90'
+    ]
   },
   {
     id: 3,
@@ -779,7 +926,13 @@ const projects = [
     category: 'Commercial',
     director: 'Hugo Kerr',
     mediaType: 'image',
-    image: 'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90'
+    image: 'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90'
+    ]
   },
   {
     id: 5,
@@ -798,7 +951,13 @@ const projects = [
     category: 'Music Video',
     director: 'Antoine Blossier',
     mediaType: 'image',
-    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&h=1080&fit=crop&q=90'
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90'
+    ]
   },
   {
     id: 7,
@@ -817,7 +976,13 @@ const projects = [
     category: 'Automotive',
     director: 'Jean-Baptiste Roy',
     mediaType: 'image',
-    image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90'
+    image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90'
+    ]
   }
 ]
 
@@ -1052,6 +1217,10 @@ onBeforeUnmount(() => {
     if (scrollUpdateThrottle.value) {
       clearTimeout(scrollUpdateThrottle.value)
     }
+    // Clear all image animation intervals
+    imageAnimations.value.forEach(interval => clearInterval(interval))
+    imageAnimations.value.clear()
+    hoveredProjects.value.clear()
   }
 })
 </script>
@@ -1182,6 +1351,18 @@ onBeforeUnmount(() => {
 .about-leave-to {
   opacity: 0;
   backdrop-filter: blur(0px);
+}
+
+/* Video Modal Transitions */
+.video-modal-enter-active,
+.video-modal-leave-active {
+  transition: all 0.3s ease;
+}
+
+.video-modal-enter-from,
+.video-modal-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
 }
 
 /* Video Player Transitions */

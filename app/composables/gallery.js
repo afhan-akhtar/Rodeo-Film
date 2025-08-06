@@ -1,6 +1,7 @@
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Lenis from 'lenis'
 
 export const useGallery = () => {
   // Register GSAP plugins
@@ -15,6 +16,7 @@ export const useGallery = () => {
   const isDragging = ref(false)
   const isInertiaActive = ref(false)
   const smoothScrollContainer = ref(null)
+  const lenisInstance = ref(null)
   
   // Configuration
   const config = {
@@ -27,6 +29,22 @@ export const useGallery = () => {
       maxX: 5000,
       minY: -5000,
       maxY: 5000
+    },
+    lenis: {
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Custom easing
+      direction: 'vertical',
+      gestureDirection: 'vertical',
+      smooth: true,
+      mouseMultiplier: 1.2,
+      smoothTouch: true,
+      touchMultiplier: 2,
+      infinite: false,
+      autoResize: true,
+      syncTouch: true,
+      touchInertiaMultiplier: 35,
+      wheelMultiplier: 1.2,
+      normalizeWheel: true,
     }
   }
 
@@ -82,6 +100,30 @@ export const useGallery = () => {
     }
   }
 
+  // Initialize Lenis smooth scrolling
+  const initializeLenis = () => {
+    if (!process.client) return
+
+    lenisInstance.value = new Lenis({
+      ...config.lenis,
+      wrapper: document.body,
+      content: document.documentElement,
+    })
+
+    // Connect Lenis with GSAP ScrollTrigger
+    lenisInstance.value.on('scroll', ScrollTrigger.update)
+    
+    // Add Lenis to GSAP ticker for perfect sync
+    gsap.ticker.add((time) => {
+      lenisInstance.value.raf(time * 1000)
+    })
+    
+    // Disable lag smoothing for better performance
+    gsap.ticker.lagSmoothing(0)
+
+    return lenisInstance.value
+  }
+
   // Start smooth scrolling animation
   const startSmoothScroll = () => {
     if (animationFrame) {
@@ -113,8 +155,15 @@ export const useGallery = () => {
     }
   }
 
-  // Enhanced wheel scrolling with momentum
+  // Enhanced wheel scrolling with Lenis and momentum
   const handleWheel = (event) => {
+    // For vertical scrolling, let Lenis handle it
+    if (!event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+      // Lenis will handle this automatically
+      return
+    }
+
+    // Prevent default for horizontal scrolling or when shift is held
     event.preventDefault()
     
     const sensitivity = 1.2
@@ -127,7 +176,7 @@ export const useGallery = () => {
       deltaY = 0
     }
 
-    // Apply momentum
+    // Apply momentum for horizontal movement
     targetX -= deltaX
     targetY -= deltaY
 
@@ -340,9 +389,54 @@ export const useGallery = () => {
     return tl
   }
 
-  // Create scroll-triggered animations for grid items
+  // Lenis scroll methods
+  const scrollTo = (target, options = {}) => {
+    if (lenisInstance.value) {
+      lenisInstance.value.scrollTo(target, {
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        ...options
+      })
+    }
+  }
+
+  const scrollToTop = () => {
+    scrollTo(0, { duration: 1.5 })
+  }
+
+  const scrollToElement = (element, offset = 0) => {
+    if (element) {
+      scrollTo(element, { offset, duration: 1.2 })
+    }
+  }
+
+  // Create scroll-triggered animations for grid items with Lenis integration
   const createScrollTriggerAnimations = () => {
     if (!process.client) return
+    
+    // Configure ScrollTrigger to work with Lenis
+    ScrollTrigger.scrollerProxy(document.body, {
+      scrollTop(value) {
+        if (arguments.length) {
+          lenisInstance.value?.scrollTo(value, { immediate: true })
+        }
+        return lenisInstance.value?.scroll ?? 0
+      },
+      scrollLeft(value) {
+        if (arguments.length) {
+          // Handle horizontal scrolling if needed
+        }
+        return 0
+      },
+      getBoundingClientRect() {
+        return {
+          top: 0,
+          left: 0,
+          width: window.innerWidth,
+          height: window.innerHeight
+        }
+      }
+    })
     
     // Animate items as they come into view
     gsap.utils.toArray('.project-grid-item').forEach((item, index) => {
@@ -350,24 +444,30 @@ export const useGallery = () => {
         {
           opacity: 0,
           scale: 0.8,
-          rotationY: -15
+          rotationY: -15,
+          y: 50
         },
         {
           opacity: 1,
           scale: 1,
           rotationY: 0,
-          duration: 0.6,
+          y: 0,
+          duration: 0.8,
           ease: "power2.out",
-          delay: index * 0.1,
+          delay: index * 0.05,
           scrollTrigger: {
             trigger: item,
-            start: "top 90%",
-            end: "bottom 10%",
-            toggleActions: "play none none reverse"
+            start: "top 85%",
+            end: "bottom 15%",
+            toggleActions: "play none none reverse",
+            scroller: document.body
           }
         }
       )
     })
+    
+    // Refresh ScrollTrigger after setup
+    ScrollTrigger.refresh()
   }
 
   // Parallax effect for background elements
@@ -436,6 +536,15 @@ export const useGallery = () => {
       gsapTween.kill()
     }
     ScrollTrigger.getAll().forEach(trigger => trigger.kill())
+    
+    // Cleanup Lenis
+    if (lenisInstance.value) {
+      lenisInstance.value.destroy()
+      lenisInstance.value = null
+    }
+    
+    // Remove from GSAP ticker
+    gsap.ticker.lagSmoothing(250, 16)
   }
 
   // Initialize on mount
@@ -443,6 +552,9 @@ export const useGallery = () => {
     if (!process.client) return
     
     await nextTick()
+    
+    // Initialize Lenis first
+    initializeLenis()
     
     // Set initial positions
     targetX = 0
@@ -453,7 +565,7 @@ export const useGallery = () => {
     // Start the animation loop
     startSmoothScroll()
     
-    // Create scroll-triggered animations
+    // Create scroll-triggered animations with Lenis integration
     createScrollTriggerAnimations()
     
     // Create parallax effects
@@ -471,6 +583,7 @@ export const useGallery = () => {
     isDragging,
     isInertiaActive,
     smoothScrollContainer,
+    lenisInstance,
     
     // Event handlers
     handleWheel,
@@ -489,6 +602,11 @@ export const useGallery = () => {
     createParallaxEffect,
     animatePageEnter,
     resetPosition,
+    
+    // Lenis methods
+    scrollTo,
+    scrollToTop,
+    scrollToElement,
     
     // Lifecycle
     initializeGallery,

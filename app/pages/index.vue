@@ -521,6 +521,19 @@
     <!-- <div class="fixed bottom-6 left-6 z-40 text-white/50 text-sm font-medium tracking-wide">
       Drag or scroll to explore
     </div> -->
+
+    <!-- Scroll to Top Button -->
+    <Transition name="scroll-button">
+      <button 
+        v-if="showScrollTop"
+        @click="gallery.scrollToTop"
+        class="fixed bottom-8 right-8 z-50 w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-110 transition-all duration-300"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white">
+          <path d="m18 15-6-6-6 6"/>
+        </svg>
+      </button>
+    </Transition>
   </div>
 </template>
 
@@ -533,6 +546,7 @@ const gallery = useGallery()
 
 // Loading state
 const showLoading = ref(true)
+const showScrollTop = ref(false)
 
 const menuOpen = ref(false)
 const projectsOpen = ref(false)
@@ -1160,8 +1174,15 @@ onMounted(async () => {
     }
     window.addEventListener('resize', handleResize)
     
-    // Store resize handler for cleanup
+    // Add scroll listener for scroll-to-top button
+    const handleScroll = () => {
+      showScrollTop.value = window.scrollY > 500
+    }
+    window.addEventListener('scroll', handleScroll)
+    
+    // Store handlers for cleanup
     window._resizeHandler = handleResize
+    window._scrollHandler = handleScroll
     
     // Initialize GSAP gallery functionality
     await gallery.initializeGallery()
@@ -1174,6 +1195,10 @@ onBeforeUnmount(() => {
     if (window._resizeHandler) {
       window.removeEventListener('resize', window._resizeHandler)
       delete window._resizeHandler
+    }
+    if (window._scrollHandler) {
+      window.removeEventListener('scroll', window._scrollHandler)
+      delete window._scrollHandler
     }
     
     // Clear all image animation intervals
@@ -1339,6 +1364,18 @@ onBeforeUnmount(() => {
   transform: scale(0.95);
 }
 
+/* Scroll Button Transitions */
+.scroll-button-enter-active,
+.scroll-button-leave-active {
+  transition: all 0.3s ease;
+}
+
+.scroll-button-enter-from,
+.scroll-button-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+}
+
 /* Disable text selection during drag */
 .showcase-container {
   -webkit-user-select: none;
@@ -1371,6 +1408,27 @@ onBeforeUnmount(() => {
 /* Hide scrollbars */
 ::-webkit-scrollbar {
   display: none;
+}
+
+/* Lenis smooth scrolling styles */
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }
 
 /* Typography styles */

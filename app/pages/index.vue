@@ -1,5 +1,6 @@
 <template>
-  <div class="min-h-screen bg-black text-white overflow-hidden relative">
+  <div class="page-wrapper">
+    <div class="min-h-screen bg-black text-white overflow-hidden relative">
     <!-- Loading Screen -->
     <LoadingSpinner 
       :is-visible="showLoading" 
@@ -534,6 +535,7 @@
         </svg>
       </button>
     </Transition>
+    </div>
   </div>
 </template>
 
@@ -567,6 +569,9 @@ const fullscreenVideo = ref(null) // For fullscreen video modal
 const imageAnimations = ref(new Map()) // Track image animation intervals
 const currentHoveredPlaylist = ref(null)
 const currentHoveredAbout = ref(null)
+
+// Video debounce utility to prevent conflicts
+const videoDebounceTimers = new Map()
 
 // Loading completion handler
 const onLoadingComplete = () => {
@@ -626,18 +631,29 @@ const handleProjectHover = async (project) => {
   const videoElement = document.querySelector('.projects-bg-video')
   if (videoElement) {
     try {
+      videoElement.muted = true
       await videoElement.play()
     } catch (error) {
-      console.log('Video play failed:', error)
+      if (error.name !== 'AbortError') {
+        console.log('Project video play failed:', error.name)
+      }
     }
   }
 }
 
-const handleProjectLeave = () => {
+const handleProjectLeave = async () => {
   const videoElement = document.querySelector('.projects-bg-video')
   if (videoElement) {
-    videoElement.pause()
-    videoElement.currentTime = 0
+    try {
+      if (!videoElement.paused) {
+        await videoElement.pause()
+      }
+      videoElement.currentTime = 0
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.log('Project video pause failed:', error.name)
+      }
+    }
   }
   currentHoveredProject.value = null
 }
@@ -651,18 +667,29 @@ const handleAwardHover = async (award) => {
   const videoElement = document.querySelector('.awards-bg-video')
   if (videoElement) {
     try {
+      videoElement.muted = true
       await videoElement.play()
     } catch (error) {
-      console.log('Video play failed:', error)
+      if (error.name !== 'AbortError') {
+        console.log('Award video play failed:', error.name)
+      }
     }
   }
 }
 
-const handleAwardLeave = () => {
+const handleAwardLeave = async () => {
   const videoElement = document.querySelector('.awards-bg-video')
   if (videoElement) {
-    videoElement.pause()
-    videoElement.currentTime = 0
+    try {
+      if (!videoElement.paused) {
+        await videoElement.pause()
+      }
+      videoElement.currentTime = 0
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.log('Award video pause failed:', error.name)
+      }
+    }
   }
   currentHoveredAward.value = null
 }
@@ -702,14 +729,30 @@ const handleEnhancedHover = (event, project) => {
   gallery.animateItemHover(event.currentTarget, project)
   
   if (project.mediaType === 'video') {
-    // Handle video hover - play in background immediately
+    // Handle video hover - play in background with proper error handling
     const videoElement = videoRefs.get(projectKey)
     if (videoElement) {
-      videoElement.muted = true // Ensure it's muted for autoplay
-      videoElement.currentTime = 0 // Start from beginning
-      videoElement.play().catch(error => {
-        console.log('Grid video play failed:', error)
-      })
+      // Reset video state
+      videoElement.muted = true
+      
+      // Debounce video operations to prevent conflicts
+      const videoKey = `play-${projectKey}`
+      if (videoDebounceTimers.has(videoKey)) {
+        clearTimeout(videoDebounceTimers.get(videoKey))
+      }
+      
+      videoDebounceTimers.set(videoKey, setTimeout(async () => {
+        try {
+          videoElement.currentTime = 0
+          await videoElement.play()
+        } catch (error) {
+          // Silently handle play interruption errors
+          if (error.name !== 'AbortError') {
+            console.log('Grid video play failed:', error.name)
+          }
+        }
+        videoDebounceTimers.delete(videoKey)
+      }, 50))
     }
   } else if (project.mediaType === 'image' && project.images && project.images.length > 1) {
     // Handle image hover - start animation cycling through images
@@ -741,11 +784,29 @@ const handleEnhancedLeave = (event, project) => {
   gallery.animateItemLeave(event.currentTarget)
   
   if (project.mediaType === 'video') {
-    // Handle video leave - pause and reset
+    // Handle video leave - pause and reset with proper async handling
     const videoElement = videoRefs.get(projectKey)
     if (videoElement) {
-      videoElement.pause()
-      videoElement.currentTime = 0
+      // Debounce video operations to prevent conflicts
+      const videoKey = `pause-${projectKey}`
+      if (videoDebounceTimers.has(videoKey)) {
+        clearTimeout(videoDebounceTimers.get(videoKey))
+      }
+      
+      videoDebounceTimers.set(videoKey, setTimeout(async () => {
+        try {
+          if (!videoElement.paused) {
+            await videoElement.pause()
+          }
+          videoElement.currentTime = 0
+        } catch (error) {
+          // Silently handle pause errors
+          if (error.name !== 'AbortError') {
+            console.log('Grid video pause failed:', error.name)
+          }
+        }
+        videoDebounceTimers.delete(videoKey)
+      }, 50))
     }
   } else if (project.mediaType === 'image' && project.images && project.images.length > 1) {
     // Handle image leave - stop animation and reset to first image
@@ -1206,6 +1267,10 @@ onBeforeUnmount(() => {
     imageAnimations.value.clear()
     hoveredProjects.value.clear()
     
+    // Clear video debounce timers
+    videoDebounceTimers.forEach(timer => clearTimeout(timer))
+    videoDebounceTimers.clear()
+    
     // Cleanup GSAP gallery
     gallery.cleanup()
   }
@@ -1429,6 +1494,13 @@ html.lenis {
 
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
+}
+
+/* Page wrapper for proper Vue transition support */
+.page-wrapper {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
 }
 
 /* Typography styles */

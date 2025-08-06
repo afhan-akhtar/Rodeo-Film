@@ -109,7 +109,7 @@
         </div>
         
         <!-- Close Button -->
-        <button @click="toggleMenu" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200">
+        <button @click="toggleMenu"  class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200">
           <div class="relative w-6 h-6">
             <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
             <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform -rotate-45 -translate-y-0.5"></div>
@@ -118,221 +118,300 @@
       </div>
     </Transition>
 
-    <!-- Projects Gallery -->
-    <Transition name="projects">
-      <div v-if="projectsOpen" class="fixed inset-0 z-40 bg-black">
-        <!-- Full Background Video -->
-        <div class="absolute inset-0">
-          <!-- Background Video (on hover) -->
-          <video 
-            v-if="currentHoveredProject"
-            :key="currentHoveredProject.id"
-            playsinline 
-            loop 
-            muted 
-            autoplay
-            :poster="currentHoveredProject.poster"
-            class="absolute inset-0 w-full h-full object-cover"
-          >
-            <source :src="currentHoveredProject.video" type="video/mp4">
-          </video>
-          
-          <!-- Default Background -->
-          <div v-else class="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
-          
-          <!-- Dark Overlay for text readability -->
-          <div class="absolute inset-0 bg-black/40"></div>
-        </div>
+   <!-- Projects Gallery -->
+<!-- Projects Gallery -->
+<Transition name="projects">
+  <div v-if="projectsOpen" class="fixed inset-0 z-40 bg-black">
+    
+    <!-- Full Background Video -->
+    <div class="absolute inset-0">
+      <video 
+        v-if="currentHoveredProject"
+        :key="currentHoveredProject.id"
+        playsinline 
+        loop 
+        muted 
+        autoplay
+        :poster="currentHoveredProject.poster"
+        class="absolute inset-0 w-full h-full object-cover"
+      >
+        <source :src="currentHoveredProject.video" type="video/mp4">
+      </video>
+
+      <div v-else class="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
+      <div class="absolute inset-0 bg-black/40"></div>
+    </div>
+
+    <!-- Project Links Overlay -->
+    <div class="relative z-10 flex flex-col items-center justify-center h-full p-12">
+      <div class="text-center max-w-4xl w-full">
+        <h2 class="font-bold tracking-wider text-white mb-8 hover:text-red-100 transition-colors duration-300" style="font-size: 16px;">
+          PROJECTS
+        </h2>
         
-        <!-- Project Links Overlay -->
-        <div class="relative z-10 flex flex-col items-center justify-center h-full p-12">
-          <div class="text-center max-w-4xl w-full">
-            <h2 class="font-bold tracking-wider text-white mb-8 hover:text-red-100 transition-colors duration-300" style="font-size: 16px;">PROJECTS</h2>
-            
-            <div class="space-y-4">
-              <div 
-                v-for="project in projectVideos" 
-                :key="project.id"
-                class="project-link group cursor-pointer"
-                @mouseenter="handleProjectHover(project)"
-                @mouseleave="handleProjectLeave"
-                @click="handleProjectClick(project)"
-              >
-                <div class="border-b border-white/30 pb-3 group-hover:border-red-400/60 transition-all duration-300">
-                  <h3 class="font-bold tracking-wider text-white group-hover:text-red-300 hover:scale-105 transition-all duration-300 mb-1" style="font-size: 14px;">
-                    {{ project.title }}
-                  </h3>
-                  <div class="flex justify-between items-center">
-                    <p class="text-white/80 font-medium" style="font-size: 11px;">{{ project.client }}</p>
-                    <p class="text-white/60" style="font-size: 11px;">{{ project.director }}</p>
-                  </div>
-                </div>
+        <div class="space-y-4">
+          <div 
+            v-for="project in projectVideos" 
+            :key="project.id"
+            class="project-link group cursor-pointer"
+            @mouseenter="handleProjectHover(project)"
+            @mouseleave="handleProjectLeave"
+            @click="handleProjectClick(project)"
+          >
+            <div class="border-b border-white/30 pb-3 group-hover:border-red-400/60 transition-all duration-300">
+              <h3 class="font-bold tracking-wider text-white group-hover:text-red-300 hover:scale-105 transition-all duration-300 mb-1" style="font-size: 14px;">
+                {{ project.title }}
+              </h3>
+              <div class="flex justify-between items-center">
+                <p class="text-white/80 font-medium" style="font-size: 11px;">{{ project.client }}</p>
+                <p class="text-white/60" style="font-size: 11px;">{{ project.director }}</p>
               </div>
             </div>
           </div>
         </div>
-        
-        <!-- Close Button -->
-        <button @click="closeProjects" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2">
-          <div class="w-6 h-0.5 bg-white transform rotate-45 absolute"></div>
-          <div class="w-6 h-0.5 bg-white transform -rotate-45"></div>
-        </button>
       </div>
-    </Transition>
+    </div>
+
+  </div>
+</Transition>
+
+
+<!-- ✅ Close Button: only shows when projectsOpen OR video is playing -->
+<button 
+  v-if="projectsOpen"
+  @click="closeProjects" 
+  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+>
+  <div class="relative w-6 h-6">
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform -rotate-45 -translate-y-0.5"></div>
+  </div>
+</button>
+
+
+
+
 
     <!-- Awards Gallery -->
-    <Transition name="awards">
-      <div v-if="awardsOpen" class="fixed inset-0 z-40 bg-black">
-        <!-- Full Background Video -->
-        <div class="absolute inset-0">
-          <!-- Background Video (on hover) -->
-          <video 
-            v-if="currentHoveredAward"
-            :key="currentHoveredAward.id"
-            playsinline 
-            loop 
-            muted 
-            autoplay
-            :poster="currentHoveredAward.poster"
-            :data-archives="currentHoveredAward.archiveId"
-            class="absolute inset-0 w-full h-full object-cover"
-          >
-            <source :src="currentHoveredAward.video" type="video/mp4">
-          </video>
-          
-          <!-- Default Background -->
-          <div v-else class="absolute inset-0 bg-gradient-to-br from-amber-900 to-black"></div>
-          
-          <!-- Dark Overlay for text readability -->
-          <div class="absolute inset-0 bg-black/40"></div>
-        </div>
+  <!-- Awards Gallery -->
+<Transition name="awards">
+  <div v-if="awardsOpen" class="fixed inset-0 z-40 bg-black">
+    
+    <!-- Full Background Video -->
+    <div class="absolute inset-0">
+      <video 
+        v-if="currentHoveredAward"
+        :key="currentHoveredAward.id"
+        playsinline 
+        loop 
+        muted 
+        autoplay
+        :poster="currentHoveredAward.poster"
+        class="absolute inset-0 w-full h-full object-cover"
+      >
+        <source :src="currentHoveredAward.video" type="video/mp4">
+      </video>
+
+      <div v-else class="absolute inset-0 bg-gradient-to-br from-amber-900 to-black"></div>
+      <div class="absolute inset-0 bg-black/40"></div>
+    </div>
+
+    <!-- Award Links Overlay -->
+    <div class="relative z-10 flex flex-col items-center justify-center h-full p-12">
+      <div class="text-center max-w-4xl w-full">
+        <h2 class="font-bold tracking-wider text-white mb-8 hover:text-red-100 transition-colors duration-300" style="font-size: 16px;">
+          AWARDS
+        </h2>
         
-        <!-- Award Links Overlay -->
-        <div class="relative z-10 flex flex-col items-center justify-center h-full p-12">
-          <div class="text-center max-w-4xl w-full">
-            <h2 class="font-bold tracking-wider text-white mb-8 hover:text-red-100 transition-colors duration-300" style="font-size: 16px;">AWARDS</h2>
-            
-            <div class="space-y-4">
-              <div 
-                v-for="award in awardVideos" 
-                :key="award.id"
-                class="award-link group cursor-pointer"
-                @mouseenter="handleAwardHover(award)"
-                @mouseleave="handleAwardLeave"
-                @click="handleAwardClick(award)"
-              >
-                <div class="border-b border-white/30 pb-3 group-hover:border-red-400/60 transition-all duration-300">
-                  <h3 class="font-bold tracking-wider text-white group-hover:text-red-300 hover:scale-105 transition-all duration-300 mb-1" style="font-size: 14px;">
-                    {{ award.title }}
-                  </h3>
-                  <div class="flex justify-between items-center">
-                    <p class="text-white/80 font-medium" style="font-size: 11px;">{{ award.award }}</p>
-                    <p class="text-white/60" style="font-size: 11px;">{{ award.category }} • {{ award.year }}</p>
-                  </div>
-                </div>
+        <div class="space-y-4">
+          <div 
+            v-for="award in awardVideos" 
+            :key="award.id"
+            class="award-link group cursor-pointer"
+            @mouseenter="handleAwardHover(award)"
+            @mouseleave="handleAwardLeave"
+            @click="handleAwardClick(award)"
+          >
+            <div class="border-b border-white/30 pb-3 group-hover:border-red-400/60 transition-all duration-300">
+              <h3 class="font-bold tracking-wider text-white group-hover:text-red-300 hover:scale-105 transition-all duration-300 mb-1" style="font-size: 14px;">
+                {{ award.title }}
+              </h3>
+              <div class="flex justify-between items-center">
+                <p class="text-white/80 font-medium" style="font-size: 11px;">{{ award.award }}</p>
+                <p class="text-white/60" style="font-size: 11px;">{{ award.category }} • {{ award.year }}</p>
               </div>
             </div>
           </div>
         </div>
-        
-        <!-- Close Button -->
-        <button @click="closeAwards" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2">
-          <div class="w-6 h-0.5 bg-white transform rotate-45 absolute"></div>
-          <div class="w-6 h-0.5 bg-white transform -rotate-45"></div>
-        </button>
       </div>
-    </Transition>
+    </div>
+
+  </div>
+</Transition>
+
+<!-- ✅ Close Button: only shows when awardsOpen is true -->
+<button 
+  v-if="awardsOpen"
+  @click="closeAwards" 
+  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+>
+  <div class="relative w-6 h-6">
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform -rotate-45 -translate-y-0.5"></div>
+  </div>
+</button>
+
 
     <!-- Playlist Gallery -->
-    <Transition name="playlist">
-      <div v-if="playlistOpen" class="fixed inset-0 z-40 bg-black">
-        <!-- Background -->
-        <div class="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
+ <!-- Playlist Gallery -->
+<Transition name="playlist">
+  <div v-if="playlistOpen" class="fixed inset-0 z-40 bg-black">
+    
+    <!-- Full Background Video -->
+    <div class="absolute inset-0">
+      <video 
+        v-if="currentHoveredPlaylist"
+        :key="currentHoveredPlaylist.id"
+        playsinline 
+        loop 
+        muted 
+        autoplay
+        :poster="currentHoveredPlaylist.poster"
+        class="absolute inset-0 w-full h-full object-cover"
+      >
+        <source :src="currentHoveredPlaylist.video" type="video/mp4">
+      </video>
+
+      <div v-else class="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
+      <div class="absolute inset-0 bg-black/40"></div>
+    </div>
+
+    <!-- Playlist Links Overlay -->
+    <div class="relative z-10 flex flex-col items-center justify-center h-full p-12">
+      <div class="text-center max-w-4xl w-full">
+        <h2 class="font-bold tracking-wider text-white mb-8 hover:text-red-100 transition-colors duration-300" style="font-size: 16px;">
+          PLAYLIST
+        </h2>
         
-        <!-- Playlist Links Overlay -->
-        <div class="relative z-10 flex flex-col items-center justify-center h-full p-12">
-          <div class="text-center max-w-4xl w-full">
-            <h2 class="font-bold tracking-wider text-white mb-8 hover:text-red-100 transition-colors duration-300" style="font-size: 16px;">PLAYLIST</h2>
-            
-            <div class="space-y-4">
-              <a 
-                v-for="playlist in playlists" 
-                :key="playlist.id"
-                :href="playlist.url"
-                target="_blank"
-                rel="noopener"
-                class="playlist-link group cursor-pointer block"
-              >
-                <div class="border-b border-white/30 pb-3 group-hover:border-red-400/60 transition-all duration-300">
-                  <div class="flex justify-between items-center">
-                    <div class="text-left">
-                      <h3 class="font-bold tracking-wider text-white group-hover:text-red-300 hover:scale-105 transition-all duration-300 mb-1" style="font-size: 14px;">
-                        {{ playlist.title }}
-                      </h3>
-                      <p class="text-white/60" style="font-size: 11px;">{{ playlist.subtitle }}</p>
-                    </div>
-                    <div class="text-right">
-                      <p class="text-white/80 uppercase tracking-wider font-semibold group-hover:text-red-400 transition-colors duration-300" style="font-size: 11px;">LISTEN</p>
-                    </div>
-                  </div>
+        <div class="space-y-4">
+          <a 
+            v-for="playlist in playlists" 
+            :key="playlist.id"
+            :href="playlist.url"
+            target="_blank"
+            rel="noopener"
+            class="playlist-link group cursor-pointer block"
+            @mouseenter="handlePlaylistHover(playlist)"
+            @mouseleave="handlePlaylistLeave"
+          >
+            <div class="border-b border-white/30 pb-3 group-hover:border-red-400/60 transition-all duration-300">
+              <div class="flex justify-between items-center">
+                <div class="text-left">
+                  <h3 class="font-bold tracking-wider text-white group-hover:text-red-300 hover:scale-105 transition-all duration-300 mb-1" style="font-size: 14px;">
+                    {{ playlist.title }}
+                  </h3>
+                  <p class="text-white/60" style="font-size: 11px;">{{ playlist.subtitle }}</p>
                 </div>
-              </a>
+                <div class="text-right">
+                  <p class="text-white/80 uppercase tracking-wider font-semibold group-hover:text-red-400 transition-colors duration-300" style="font-size: 11px;">
+                    LISTEN
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          </a>
         </div>
-        
-        <!-- Close Button -->
-        <button @click="closePlaylist" class="absolute top-20 right-6 lg:top-24 lg:right-8 p-2 z-50">
-          <div class="w-6 h-0.5 bg-white transform rotate-45 absolute"></div>
-          <div class="w-6 h-0.5 bg-white transform -rotate-45"></div>
-        </button>
       </div>
-    </Transition>
+    </div>
+
+  </div>
+</Transition>
+
+<!-- ✅ Close Button -->
+<button 
+  v-if="playlistOpen"
+  @click="closePlaylist" 
+  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+>
+  <div class="relative w-6 h-6">
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform -rotate-45 -translate-y-0.5"></div>
+  </div>
+</button>
+
 
     <!-- About Section -->
-    <Transition name="about">
-      <div v-if="aboutOpen" class="fixed inset-0 z-40 bg-black">
-        <!-- Background -->
-        <div class="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
-        
-        <!-- About Content Overlay -->
-        <div class="relative z-10 flex flex-col items-center justify-center h-full p-12">
-          <div class="text-center max-w-4xl w-full">
-            <h2 class="font-bold tracking-wider text-white mb-8 hover:text-red-100 transition-colors duration-300" style="font-size: 16px;">ABOUT</h2>
-            
-            <div class="space-y-6">
-              <!-- About Text -->
-              <div class="text-center">
-                <p class="font-light tracking-wide text-white/90 leading-relaxed mb-6" style="font-size: 13px;">
-                  Rodeo Film is a collective based on the association of diverse talents. Comprising directors, photographers, editors, designers, and composers, we believe in the power of compelling visual stories that touch the heart and leave a lasting impression. We believe that every ordinary life holds an extraordinary story. We are convinced that the simplest moments can be transformed into captivating narratives, uncovering beauty in everyday life and revealing the exceptional in the ordinary.
+  <!-- About Section -->
+<Transition name="about">
+  <div v-if="aboutOpen" class="fixed inset-0 z-40 bg-black">
+    
+    <!-- Full Background Video or Fallback -->
+    <div class="absolute inset-0">
+      <video 
+        v-if="currentHoveredAbout"
+        :key="currentHoveredAbout.id"
+        playsinline 
+        loop 
+        muted 
+        autoplay
+        :poster="currentHoveredAbout.poster"
+        class="absolute inset-0 w-full h-full object-cover"
+      >
+        <source :src="currentHoveredAbout.video" type="video/mp4">
+      </video>
+
+      <div v-else class="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
+      <div class="absolute inset-0 bg-black/40"></div>
+    </div>
+
+    <!-- About Content Overlay -->
+    <div class="relative z-10 flex flex-col items-center justify-center h-full p-12">
+      <div class="text-center max-w-4xl w-full">
+        <h2 class="font-bold tracking-wider text-white mb-8 hover:text-red-100 transition-colors duration-300" style="font-size: 16px;">
+          ABOUT
+        </h2>
+
+        <div class="space-y-6">
+          <!-- About Text -->
+          <div class="text-center">
+            <p class="font-light tracking-wide text-white/90 leading-relaxed mb-6" style="font-size: 13px;">
+              Rodeo Film is a collective based on the association of diverse talents. Comprising directors, photographers, editors, designers, and composers, we believe in the power of compelling visual stories that touch the heart and leave a lasting impression. We believe that every ordinary life holds an extraordinary story. We are convinced that the simplest moments can be transformed into captivating narratives, uncovering beauty in everyday life and revealing the exceptional in the ordinary.
+            </p>
+          </div>
+
+          <!-- Contact Link -->
+          <div class="border-t border-white/30 pt-4">
+            <a 
+              href="mailto:hugo@rodeo.film"
+              class="contact-link group cursor-pointer inline-block"
+            >
+              <div class="group-hover:text-red-300 transition-colors duration-300 hover:scale-105 transform transition-transform">
+                <p class="font-bold tracking-wider text-white uppercase" style="font-size: 14px;">
+                  Contact Us
                 </p>
+                <p class="text-white/60 mt-1" style="font-size: 12px;">hugo@rodeo.film</p>
               </div>
-              
-              <!-- Contact Link -->
-              <div class="border-t border-white/30 pt-4">
-                <a 
-                  href="mailto:hugo@rodeo.film"
-                  class="contact-link group cursor-pointer inline-block"
-                >
-                  <div class="group-hover:text-red-300 transition-colors duration-300 hover:scale-105 transform transition-transform">
-                    <p class="font-bold tracking-wider text-white uppercase" style="font-size: 14px;">
-                      Contact Us
-                    </p>
-                    <p class="text-white/60 mt-1" style="font-size: 12px;">hugo@rodeo.film</p>
-                  </div>
-                </a>
-              </div>
-            </div>
+            </a>
           </div>
         </div>
-        
-        <!-- Close Button -->
-        <button @click="closeAbout" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2">
-          <div class="w-6 h-0.5 bg-white transform rotate-45 absolute"></div>
-          <div class="w-6 h-0.5 bg-white transform -rotate-45"></div>
-        </button>
       </div>
-    </Transition>
+    </div>
+
+  </div>
+</Transition>
+
+<!-- ✅ Close Button -->
+<button 
+  v-if="aboutOpen"
+  @click="closeAbout" 
+  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+>
+  <div class="relative w-6 h-6">
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform -rotate-45 -translate-y-0.5"></div>
+  </div>
+</button>
+
 
     <!-- Full Video Player -->
     <Transition name="video">

@@ -81,6 +81,11 @@
             
           </div>
           
+          <!-- Award Badge -->
+          <div v-if="project.isAward" class="absolute top-4 right-4 bg-yellow-600 text-black text-xs font-bold px-2 py-1 rounded-full opacity-90">
+            AWARD
+          </div>
+          
           <!-- Bottom Text Overlay (like real site) -->
           <div class="absolute bottom-8 right-8 text-right text-white">
            
@@ -632,7 +637,17 @@ const handleAwardLeave = () => {
 }
 
 const handleAwardClick = (award) => {
-  currentPlayingAward.value = award
+  // Use the same fullscreen logic as projects
+  if (award && award.video) {
+    fullscreenVideo.value = {
+      ...award,
+      mediaType: 'video',
+      showcase_title: award.title,
+      client: award.award,
+      category: award.category,
+      director: award.year
+    }
+  }
 }
 
 const closeFullVideo = () => {
@@ -983,6 +998,40 @@ const projects = [
       'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
       'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90'
     ]
+  },
+  // Award videos in the grid
+  {
+    id: 9,
+    showcase_title: 'BENOIT',
+    client: 'Cannes Lions Gold',
+    category: 'Film Craft',
+    director: '2024',
+    mediaType: 'video',
+    video: 'https://rodeo.film/media/site/77663f7dc9-1717172886/benoit.mp4',
+    poster: 'https://rodeo.film/media/site/3389e7c5bd-1670502543/benoit_3.jpg',
+    isAward: true
+  },
+  {
+    id: 10,
+    showcase_title: 'BOUCAN',
+    client: 'D&AD Pencil',
+    category: 'Direction',
+    director: '2024',
+    mediaType: 'video',
+    video: 'https://rodeo.film/media/site/1752ed6232-1717423146/boucan_1.mp4',
+    poster: 'https://rodeo.film/media/site/8061eff27c-1670345386/affiche_boucan_-copie.jpg',
+    isAward: true
+  },
+  {
+    id: 11,
+    showcase_title: 'SWEET',
+    client: 'AICP Awards',
+    category: 'Commercial',
+    director: '2023',
+    mediaType: 'video',
+    video: 'https://rodeo.film/media/site/0207051adb-1717407391/sweet.mp4',
+    poster: 'https://rodeo.film/media/site/8abc968a13-1670504153/boucan_1_6.jpg',
+    isAward: true
   }
 ]
 

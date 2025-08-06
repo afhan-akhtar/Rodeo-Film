@@ -109,9 +109,11 @@
         </div>
         
         <!-- Close Button -->
-        <button @click="toggleMenu" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2">
-          <div class="w-6 h-0.5 bg-white transform rotate-45 absolute"></div>
-          <div class="w-6 h-0.5 bg-white transform -rotate-45"></div>
+        <button @click="toggleMenu" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200">
+          <div class="relative w-6 h-6">
+            <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
+            <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform -rotate-45 -translate-y-0.5"></div>
+          </div>
         </button>
       </div>
     </Transition>

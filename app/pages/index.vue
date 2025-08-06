@@ -496,6 +496,7 @@ const lastMouseX = ref(0)
 const lastMouseY = ref(0)
 const lastTouchX = ref(0)
 const lastTouchY = ref(0)
+const scrollUpdateThrottle = ref(null)
 
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value
@@ -620,20 +621,35 @@ const handleGridVideoLeave = (event) => {
   }
 }
 
+// Throttled scroll update for better performance
+const updateScrollPosition = (deltaX, deltaY) => {
+  if (scrollUpdateThrottle.value) {
+    clearTimeout(scrollUpdateThrottle.value)
+  }
+  
+  scrollUpdateThrottle.value = setTimeout(() => {
+    scrollX.value += deltaX
+    scrollY.value += deltaY
+  }, 1) // Very small throttle for smooth scrolling
+}
+
 // Enhanced wheel scrolling for grid navigation
 const handleWheel = (event) => {
   event.preventDefault()
   
   const sensitivity = 1.5 // Reduced sensitivity for grid navigation
   
-  // Allow scrolling in all directions
-  scrollX.value += event.deltaX * sensitivity
-  scrollY.value += event.deltaY * sensitivity
+  // Calculate deltas
+  let deltaX = event.deltaX * sensitivity
+  let deltaY = event.deltaY * sensitivity
   
   // Also allow horizontal scrolling with shift
   if (event.shiftKey) {
-    scrollX.value += event.deltaY * sensitivity
+    deltaX += event.deltaY * sensitivity
   }
+  
+  // Use throttled update for smooth performance
+  updateScrollPosition(deltaX, deltaY)
 }
 
 // Mouse drag controls
@@ -693,32 +709,34 @@ const handleTouchEnd = () => {
 const clientWidth = ref(1920)
 const clientHeight = ref(1080)
 
-// Position each grid item in hexagonal honeycomb pattern
+// Position each grid item in hexagonal honeycomb pattern (seamless)
 const getGridPosition = (gridX, gridY) => {
   // Responsive sizing based on viewport
   const baseWidth = 280
   const baseHeight = 240 // Slightly taller for hexagon shape
-  const gap = 10 // Reduced gap for tighter hexagon pattern
+  const gap = 0 // No gaps for seamless hexagon pattern
   
   // Scale items based on viewport size
   const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
   const itemWidth = baseWidth * scale
   const itemHeight = baseHeight * scale
-  const scaledGap = gap * scale
   
   // Hexagonal positioning: offset every other row
   const isOddRow = gridY % 2 === 1
-  const offsetX = isOddRow ? (itemWidth + scaledGap) * 0.5 : 0
+  // For seamless hexagons, horizontal spacing is 3/4 of width
+  const horizontalSpacing = itemWidth * 0.75
+  const offsetX = isOddRow ? horizontalSpacing * 0.5 : 0
   
-  // Vertical spacing adjusted for hexagon overlap
-  const verticalSpacing = (itemHeight + scaledGap) * 0.75
+  // Vertical spacing for seamless hexagons (roughly 87% of height)
+  const verticalSpacing = itemHeight * 0.87
   
   return {
     position: 'absolute',
-    left: `${gridX * (itemWidth + scaledGap) + offsetX}px`,
+    left: `${gridX * horizontalSpacing + offsetX}px`,
     top: `${gridY * verticalSpacing}px`,
     width: `${itemWidth}px`,
-    height: `${itemHeight}px`
+    height: `${itemHeight}px`,
+    zIndex: 1
   }
 }
 
@@ -916,21 +934,38 @@ const playlists = [
   }
 ]
 
-// Create infinite grid of small project showcases
+// Create infinite grid of small project showcases with dynamic viewport-based generation
 const gridProjects = computed(() => {
   const grid = []
-  const gridSize = 6 // 6x6 sections for more content
-  const itemsPerRow = 6 // 6 items per row for smaller grid
   
-  for (let x = -gridSize; x <= gridSize; x++) {
-    for (let y = -gridSize; y <= gridSize; y++) {
-      projects.forEach((project, index) => {
-        grid.push({
-          ...project,
-          gridX: x * itemsPerRow + (index % itemsPerRow),
-          gridY: y * Math.ceil(projects.length / itemsPerRow) + Math.floor(index / itemsPerRow),
-          id: `${project.id}-${x}-${y}`
-        })
+  // Calculate viewport bounds in grid coordinates
+  const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
+  const itemWidth = 280 * scale
+  const itemHeight = 240 * scale
+  const horizontalSpacing = itemWidth * 0.75
+  const verticalSpacing = itemHeight * 0.87
+  
+  // Calculate visible range with extra buffer for smooth scrolling
+  const bufferMultiplier = 3
+  const visibleColumns = Math.ceil(clientWidth.value / horizontalSpacing) * bufferMultiplier
+  const visibleRows = Math.ceil(clientHeight.value / verticalSpacing) * bufferMultiplier
+  
+  // Calculate grid offset based on current scroll position
+  const gridOffsetX = Math.floor(-scrollX.value / horizontalSpacing) - Math.floor(visibleColumns / 2)
+  const gridOffsetY = Math.floor(-scrollY.value / verticalSpacing) - Math.floor(visibleRows / 2)
+  
+  // Generate grid items in visible area plus buffer
+  for (let x = gridOffsetX; x < gridOffsetX + visibleColumns; x++) {
+    for (let y = gridOffsetY; y < gridOffsetY + visibleRows; y++) {
+      // Use modulo to cycle through projects infinitely
+      const projectIndex = ((Math.abs(x) + Math.abs(y)) % projects.length)
+      const project = projects[projectIndex]
+      
+      grid.push({
+        ...project,
+        gridX: x,
+        gridY: y,
+        id: `${project.id}-${x}-${y}`
       })
     }
   }
@@ -944,13 +979,11 @@ const handleKeyDown = (event) => {
   const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
   const baseWidth = 280
   const baseHeight = 240
-  const gap = 10
   const itemWidth = baseWidth * scale
   const itemHeight = baseHeight * scale
-  const scaledGap = gap * scale
   
-  const horizontalSpeed = itemWidth + scaledGap
-  const verticalSpeed = (itemHeight + scaledGap) * 0.75 // Adjusted for hexagon spacing
+  const horizontalSpeed = itemWidth * 0.75 // Seamless hexagon horizontal spacing
+  const verticalSpeed = itemHeight * 0.87 // Seamless hexagon vertical spacing
   
   switch (event.code) {
     case 'ArrowUp':
@@ -1013,6 +1046,10 @@ onBeforeUnmount(() => {
       window.removeEventListener('resize', window._resizeHandler)
       delete window._resizeHandler
     }
+    // Clear any pending scroll updates
+    if (scrollUpdateThrottle.value) {
+      clearTimeout(scrollUpdateThrottle.value)
+    }
   }
 })
 </script>
@@ -1039,11 +1076,17 @@ onBeforeUnmount(() => {
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  /* Ensure no margin or border that could create gaps */
+  margin: 0;
+  border: none;
+  /* Use transform3d for better performance */
+  transform: translate3d(0, 0, 0);
 }
 
 .project-grid-item:hover {
-  transform: translateY(-4px);
+  transform: translate3d(0, -4px, 0);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 10;
 }
 
 .hexagon-content {

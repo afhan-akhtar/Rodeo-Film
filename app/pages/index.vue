@@ -23,7 +23,7 @@
       </div>
     </nav>
 
-    <!-- 360° Full-Screen Project Showcase -->
+    <!-- Grid Project Showcase -->
     <div 
       class="showcase-container"
       @wheel="handleWheel" 
@@ -42,41 +42,46 @@
           cursor: isDragging ? 'grabbing' : 'grab'
         }"
       >
-        <!-- Large Project Showcases -->
+        <!-- Grid Project Showcases -->
         <div 
-          v-for="project in infiniteProjects" 
+          v-for="project in gridProjects" 
           :key="`showcase-${project.id}-${project.gridX}-${project.gridY}`"
-          class="project-showcase"
-          :style="getShowcasePosition(project.gridX, project.gridY)"
+          class="project-grid-item"
+          :style="getGridPosition(project.gridX, project.gridY)"
+          @mouseenter="handleGridVideoHover($event, project)"
+          @mouseleave="handleGridVideoLeave($event)"
         >
           <!-- Background Image/Video -->
-          <div class="absolute inset-0">
+          <div class="relative w-full h-full overflow-hidden rounded-lg group">
+            <!-- Conditional rendering for video or image -->
+            <video
+              v-if="project.mediaType === 'video'"
+              :poster="project.poster"
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              muted
+              loop
+              playsinline
+            >
+              <source :src="project.video" type="video/mp4">
+              <!-- Fallback to poster image if video fails -->
+              <img :src="project.poster" :alt="project.showcase_title" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            </video>
             <img
+              v-else
               :src="project.image"
-              :alt="project.title"
-              class="w-full h-full object-cover"
+              :alt="project.showcase_title"
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
-            <div class="absolute inset-0 bg-black/10"></div>
-          </div>
-          
-          <!-- Project Content -->
-          <div class="absolute inset-0 flex flex-col justify-center items-center text-center p-8">
-            <!-- Large Project Title -->
-            <h1 class="text-7xl lg:text-9xl xl:text-10xl font-bold tracking-wider mb-6 text-white uppercase hover:text-red-100 transition-colors duration-500 cursor-default">
-              {{ project.showcase_title }}
-            </h1>
             
-            <!-- Project Info -->
-            <div class="text-xl lg:text-2xl text-white/80 tracking-wide font-light">
-              {{ project.client }} • {{ project.category }}
-            </div>
+            <!-- Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            
           </div>
           
           <!-- Bottom Text Overlay (like real site) -->
           <div class="absolute bottom-8 right-8 text-right text-white">
-            <div class="text-sm uppercase tracking-wider opacity-70">
-              {{ project.director }}
-            </div>
+           
           </div>
         </div>
       </div>
@@ -131,9 +136,8 @@
         playsinline 
         loop 
         muted 
-        autoplay
         :poster="currentHoveredProject.poster"
-        class="absolute inset-0 w-full h-full object-cover"
+        class="projects-bg-video absolute inset-0 w-full h-full object-cover"
       >
         <source :src="currentHoveredProject.video" type="video/mp4">
       </video>
@@ -205,9 +209,8 @@
         playsinline 
         loop 
         muted 
-        autoplay
         :poster="currentHoveredAward.poster"
-        class="absolute inset-0 w-full h-full object-cover"
+        class="awards-bg-video absolute inset-0 w-full h-full object-cover"
       >
         <source :src="currentHoveredAward.video" type="video/mp4">
       </video>
@@ -475,7 +478,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount, nextTick } from 'vue'
 
 const menuOpen = ref(false)
 const projectsOpen = ref(false)
@@ -538,11 +541,26 @@ const closeAbout = () => {
   aboutOpen.value = false
 }
 
-const handleProjectHover = (project) => {
+const handleProjectHover = async (project) => {
   currentHoveredProject.value = project
+  // Wait for video element to be created and then play it
+  await nextTick()
+  const videoElement = document.querySelector('.projects-bg-video')
+  if (videoElement) {
+    try {
+      await videoElement.play()
+    } catch (error) {
+      console.log('Video play failed:', error)
+    }
+  }
 }
 
 const handleProjectLeave = () => {
+  const videoElement = document.querySelector('.projects-bg-video')
+  if (videoElement) {
+    videoElement.pause()
+    videoElement.currentTime = 0
+  }
   currentHoveredProject.value = null
 }
 
@@ -550,11 +568,26 @@ const handleProjectClick = (project) => {
   currentPlayingProject.value = project
 }
 
-const handleAwardHover = (award) => {
+const handleAwardHover = async (award) => {
   currentHoveredAward.value = award
+  // Wait for video element to be created and then play it
+  await nextTick()
+  const videoElement = document.querySelector('.awards-bg-video')
+  if (videoElement) {
+    try {
+      await videoElement.play()
+    } catch (error) {
+      console.log('Video play failed:', error)
+    }
+  }
 }
 
 const handleAwardLeave = () => {
+  const videoElement = document.querySelector('.awards-bg-video')
+  if (videoElement) {
+    videoElement.pause()
+    videoElement.currentTime = 0
+  }
   currentHoveredAward.value = null
 }
 
@@ -567,11 +600,31 @@ const closeFullVideo = () => {
   currentPlayingAward.value = null
 }
 
-// Enhanced wheel scrolling for true 360° navigation
+// Grid video hover functions
+const handleGridVideoHover = (event, project) => {
+  if (project.mediaType === 'video') {
+    const videoElement = event.currentTarget.querySelector('video')
+    if (videoElement) {
+      videoElement.play().catch(error => {
+        console.log('Grid video play failed:', error)
+      })
+    }
+  }
+}
+
+const handleGridVideoLeave = (event) => {
+  const videoElement = event.currentTarget.querySelector('video')
+  if (videoElement) {
+    videoElement.pause()
+    videoElement.currentTime = 0
+  }
+}
+
+// Enhanced wheel scrolling for grid navigation
 const handleWheel = (event) => {
   event.preventDefault()
   
-  const sensitivity = 3
+  const sensitivity = 1.5 // Reduced sensitivity for grid navigation
   
   // Allow scrolling in all directions
   scrollX.value += event.deltaX * sensitivity
@@ -640,14 +693,25 @@ const handleTouchEnd = () => {
 const clientWidth = ref(1920)
 const clientHeight = ref(1080)
 
-// Position each showcase in 360° space
-const getShowcasePosition = (gridX, gridY) => {
+// Position each grid item in space with responsive sizing
+const getGridPosition = (gridX, gridY) => {
+  // Responsive sizing based on viewport
+  const baseWidth = 280
+  const baseHeight = 210
+  const gap = 20
+  
+  // Scale items based on viewport size
+  const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
+  const itemWidth = baseWidth * scale
+  const itemHeight = baseHeight * scale
+  const scaledGap = gap * scale
+  
   return {
     position: 'absolute',
-    left: `${gridX * clientWidth.value}px`,
-    top: `${gridY * clientHeight.value}px`,
-    width: `${clientWidth.value}px`,
-    height: `${clientHeight.value}px`
+    left: `${gridX * (itemWidth + scaledGap)}px`,
+    top: `${gridY * (itemHeight + scaledGap)}px`,
+    width: `${itemWidth}px`,
+    height: `${itemHeight}px`
   }
 }
 
@@ -659,7 +723,9 @@ const projects = [
     client: 'Netflix',
     category: 'Series',
     director: 'Gabriel Dugué',
-    image: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1920&h=1080&fit=crop&q=90'
+    mediaType: 'video',
+    video: 'https://rodeo.film/media/site/f0bdc32d47-1717166278/ap.mp4',
+    poster: 'https://rodeo.film/media/site/ac2caafa79-1670507066/13.jpg'
   },
   {
     id: 2,
@@ -667,6 +733,7 @@ const projects = [
     client: 'Arte',
     category: 'Documentary',
     director: 'Hugo Kerr',
+    mediaType: 'image',
     image: 'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90'
   },
   {
@@ -675,7 +742,9 @@ const projects = [
     client: 'Canal+',
     category: 'Series',
     director: 'Gabriel Dugué',
-    image: 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90'
+    mediaType: 'video',
+    video: 'https://rodeo.film/media/site/3ed14dabac-1717424859/wheels.mp4',
+    poster: 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90'
   },
   {
     id: 4,
@@ -683,6 +752,7 @@ const projects = [
     client: 'Nike',
     category: 'Commercial',
     director: 'Hugo Kerr',
+    mediaType: 'image',
     image: 'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90'
   },
   {
@@ -691,7 +761,9 @@ const projects = [
     client: 'Apple',
     category: 'Product Film',
     director: 'Claire Martin',
-    image: 'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90'
+    mediaType: 'video',
+    video: 'https://rodeo.film/media/site/9640d12f12-1718114663/boucle3.mp4',
+    poster: 'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90'
   },
   {
     id: 6,
@@ -699,6 +771,7 @@ const projects = [
     client: 'Spotify',
     category: 'Music Video',
     director: 'Antoine Blossier',
+    mediaType: 'image',
     image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&h=1080&fit=crop&q=90'
   },
   {
@@ -707,7 +780,9 @@ const projects = [
     client: 'Adidas',
     category: 'Sports Film',
     director: 'Sofia Chen',
-    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90'
+    mediaType: 'video',
+    video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    poster: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90'
   },
   {
     id: 8,
@@ -715,6 +790,7 @@ const projects = [
     client: 'Mercedes',
     category: 'Automotive',
     director: 'Jean-Baptiste Roy',
+    mediaType: 'image',
     image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90'
   }
 ]
@@ -833,18 +909,19 @@ const playlists = [
   }
 ]
 
-// Create infinite 360° grid of showcases
-const infiniteProjects = computed(() => {
+// Create infinite grid of small project showcases
+const gridProjects = computed(() => {
   const grid = []
-  const gridSize = 4 // 4x4 sections for navigation
+  const gridSize = 6 // 6x6 sections for more content
+  const itemsPerRow = 6 // 6 items per row for smaller grid
   
   for (let x = -gridSize; x <= gridSize; x++) {
     for (let y = -gridSize; y <= gridSize; y++) {
       projects.forEach((project, index) => {
         grid.push({
           ...project,
-          gridX: x + (index % 3), // 3 projects per row
-          gridY: y + Math.floor(index / 3), // Multiple rows
+          gridX: x * itemsPerRow + (index % itemsPerRow),
+          gridY: y * Math.ceil(projects.length / itemsPerRow) + Math.floor(index / itemsPerRow),
           id: `${project.id}-${x}-${y}`
         })
       })
@@ -854,28 +931,39 @@ const infiniteProjects = computed(() => {
   return grid
 })
 
-// Keyboard controls
+// Keyboard controls for grid navigation
 const handleKeyDown = (event) => {
-  const speed = 100
+  // Calculate responsive spacing
+  const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
+  const baseWidth = 280
+  const baseHeight = 210
+  const gap = 20
+  const itemWidth = baseWidth * scale
+  const itemHeight = baseHeight * scale
+  const scaledGap = gap * scale
+  
+  const horizontalSpeed = itemWidth + scaledGap
+  const verticalSpeed = itemHeight + scaledGap
+  
   switch (event.code) {
     case 'ArrowUp':
     case 'KeyW':
-      scrollY.value += speed
+      scrollY.value += verticalSpeed
       event.preventDefault()
       break
     case 'ArrowDown':
     case 'KeyS':
-      scrollY.value -= speed
+      scrollY.value -= verticalSpeed
       event.preventDefault()
       break
     case 'ArrowLeft':
     case 'KeyA':
-      scrollX.value += speed
+      scrollX.value += horizontalSpeed
       event.preventDefault()
       break
     case 'ArrowRight':
     case 'KeyD':
-      scrollX.value -= speed
+      scrollX.value -= horizontalSpeed
       event.preventDefault()
       break
     case 'Space':
@@ -938,11 +1026,46 @@ onBeforeUnmount(() => {
   transition: transform 0.1s linear;
 }
 
-.project-showcase {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.project-grid-item {
+  display: block;
   background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project-grid-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .project-grid-item {
+    border-radius: 6px;
+  }
+  
+  .project-grid-item h3 {
+    font-size: 0.875rem;
+  }
+  
+  .project-grid-item .text-sm {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-grid-item {
+    border-radius: 4px;
+  }
+  
+  .project-grid-item h3 {
+    font-size: 0.75rem;
+  }
+  
+  .project-grid-item .text-sm {
+    font-size: 0.625rem;
+  }
 }
 
 /* Menu Transitions */

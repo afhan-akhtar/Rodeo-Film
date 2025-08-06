@@ -15,7 +15,7 @@
         </svg>
         
         <!-- Hamburger Menu -->
-        <button v-if="!projectsOpen && !currentPlayingProject" class="hamburger-menu p-2" @click="toggleMenu">
+        <button v-if="!projectsOpen && !currentPlayingProject && !awardsOpen && !playlistOpen && !aboutOpen" class="hamburger-menu p-2" @click="toggleMenu">
           <div class="w-6 h-0.5 bg-white mb-1.5 transition-all duration-300"></div>
           <div class="w-6 h-0.5 bg-white mb-1.5 transition-all duration-300"></div>
           <div class="w-6 h-0.5 bg-white transition-all duration-300"></div>
@@ -170,7 +170,7 @@
           </div>
         </div>
         
-        Close Button
+        <!-- Close Button -->
         <button @click="closeProjects" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2">
           <div class="w-6 h-0.5 bg-white transform rotate-45 absolute"></div>
           <div class="w-6 h-0.5 bg-white transform -rotate-45"></div>

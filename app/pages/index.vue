@@ -468,9 +468,9 @@
     </Transition>
 
     <!-- Navigation Instructions -->
-    <div class="fixed bottom-6 left-6 z-40 text-white/50 text-sm font-medium tracking-wide">
+    <!-- <div class="fixed bottom-6 left-6 z-40 text-white/50 text-sm font-medium tracking-wide">
       Drag or scroll to explore
-    </div>
+    </div> -->
   </div>
 </template>
 

@@ -52,7 +52,7 @@
           @mouseleave="handleGridVideoLeave($event)"
         >
           <!-- Background Image/Video -->
-          <div class="relative w-full h-full overflow-hidden rounded-lg group">
+          <div class="relative w-full h-full overflow-hidden group hexagon-content">
             <!-- Conditional rendering for video or image -->
             <video
               v-if="project.mediaType === 'video'"
@@ -693,12 +693,12 @@ const handleTouchEnd = () => {
 const clientWidth = ref(1920)
 const clientHeight = ref(1080)
 
-// Position each grid item in space with responsive sizing
+// Position each grid item in hexagonal honeycomb pattern
 const getGridPosition = (gridX, gridY) => {
   // Responsive sizing based on viewport
   const baseWidth = 280
-  const baseHeight = 210
-  const gap = 20
+  const baseHeight = 240 // Slightly taller for hexagon shape
+  const gap = 10 // Reduced gap for tighter hexagon pattern
   
   // Scale items based on viewport size
   const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
@@ -706,10 +706,17 @@ const getGridPosition = (gridX, gridY) => {
   const itemHeight = baseHeight * scale
   const scaledGap = gap * scale
   
+  // Hexagonal positioning: offset every other row
+  const isOddRow = gridY % 2 === 1
+  const offsetX = isOddRow ? (itemWidth + scaledGap) * 0.5 : 0
+  
+  // Vertical spacing adjusted for hexagon overlap
+  const verticalSpacing = (itemHeight + scaledGap) * 0.75
+  
   return {
     position: 'absolute',
-    left: `${gridX * (itemWidth + scaledGap)}px`,
-    top: `${gridY * (itemHeight + scaledGap)}px`,
+    left: `${gridX * (itemWidth + scaledGap) + offsetX}px`,
+    top: `${gridY * verticalSpacing}px`,
     width: `${itemWidth}px`,
     height: `${itemHeight}px`
   }
@@ -931,19 +938,19 @@ const gridProjects = computed(() => {
   return grid
 })
 
-// Keyboard controls for grid navigation
+// Keyboard controls for hexagonal grid navigation
 const handleKeyDown = (event) => {
-  // Calculate responsive spacing
+  // Calculate responsive spacing for hexagonal layout
   const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
   const baseWidth = 280
-  const baseHeight = 210
-  const gap = 20
+  const baseHeight = 240
+  const gap = 10
   const itemWidth = baseWidth * scale
   const itemHeight = baseHeight * scale
   const scaledGap = gap * scale
   
   const horizontalSpeed = itemWidth + scaledGap
-  const verticalSpeed = itemHeight + scaledGap
+  const verticalSpeed = (itemHeight + scaledGap) * 0.75 // Adjusted for hexagon spacing
   
   switch (event.code) {
     case 'ArrowUp':
@@ -1029,9 +1036,9 @@ onBeforeUnmount(() => {
 .project-grid-item {
   display: block;
   background: #000;
-  border-radius: 8px;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
 .project-grid-item:hover {
@@ -1039,12 +1046,17 @@ onBeforeUnmount(() => {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
+.hexagon-content {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.hexagon-content video,
+.hexagon-content img {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
-  .project-grid-item {
-    border-radius: 6px;
-  }
-  
   .project-grid-item h3 {
     font-size: 0.875rem;
   }
@@ -1055,10 +1067,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 480px) {
-  .project-grid-item {
-    border-radius: 4px;
-  }
-  
   .project-grid-item h3 {
     font-size: 0.75rem;
   }

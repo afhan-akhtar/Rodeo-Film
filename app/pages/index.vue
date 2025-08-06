@@ -892,7 +892,7 @@ const clientHeight = ref(1080)
 // Position each grid item in proper hexagonal honeycomb pattern
 const getGridPosition = (gridX, gridY) => {
   // Responsive sizing based on viewport
-  const baseWidth = 280
+  const baseWidth = 400
   const baseHeight = Math.round(baseWidth / 1.154) // Perfect hexagon height ratio
   
   // Scale items based on viewport size

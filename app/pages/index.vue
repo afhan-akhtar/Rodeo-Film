@@ -1,5 +1,11 @@
 <template>
   <div class="min-h-screen bg-black text-white overflow-hidden relative">
+    <!-- Loading Screen -->
+    <LoadingSpinner 
+      :is-visible="showLoading" 
+      :duration="2500"
+      @complete="onLoadingComplete"
+    />
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 p-6 lg:p-8">
       <div class="flex justify-between items-center">
@@ -26,14 +32,14 @@
     <!-- Grid Project Showcase -->
     <div 
       class="showcase-container"
-      @wheel="handleWheel" 
-      @mousedown="handleMouseDown"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
-      @mouseleave="handleMouseUp"
-      @touchstart="handleTouchStart" 
-      @touchmove="handleTouchMove"
-      @touchend="handleTouchEnd"
+      @wheel="gallery.handleWheel" 
+      @mousedown="gallery.handleMouseDown"
+      @mousemove="gallery.handleMouseMove"
+      @mouseup="gallery.handleMouseUp"
+      @mouseleave="gallery.handleMouseUp"
+      @touchstart="gallery.handleTouchStart" 
+      @touchmove="gallery.handleTouchMove"
+      @touchend="gallery.handleTouchEnd"
     >
       <div 
         class="showcase-wrapper" 
@@ -520,6 +526,13 @@
 
 <script setup>
 import { ref, onMounted, computed, onBeforeUnmount, nextTick } from 'vue'
+import { useGallery } from '~/composables/gallery'
+
+// Initialize GSAP Gallery functionality
+const gallery = useGallery()
+
+// Loading state
+const showLoading = ref(true)
 
 const menuOpen = ref(false)
 const projectsOpen = ref(false)
@@ -530,19 +543,23 @@ const currentHoveredProject = ref(null)
 const currentPlayingProject = ref(null)
 const currentHoveredAward = ref(null)
 const currentPlayingAward = ref(null)
-const scrollX = ref(0)
-const scrollY = ref(0)
-const isDragging = ref(false)
-const lastMouseX = ref(0)
-const lastMouseY = ref(0)
-const lastTouchX = ref(0)
-const lastTouchY = ref(0)
-const scrollUpdateThrottle = ref(null)
+
+// Use gallery's reactive scroll values instead of local ones
+const { scrollX, scrollY, isDragging } = gallery
 
 // Enhanced hover states for videos and images
 const hoveredProjects = ref(new Map()) // Track hovered projects and their animation states
 const fullscreenVideo = ref(null) // For fullscreen video modal
 const imageAnimations = ref(new Map()) // Track image animation intervals
+const currentHoveredPlaylist = ref(null)
+const currentHoveredAbout = ref(null)
+
+// Loading completion handler
+const onLoadingComplete = () => {
+  showLoading.value = false
+  // Trigger entrance animations for the main content
+  gallery.animatePageEnter()
+}
 
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value
@@ -667,6 +684,9 @@ const setVideoRef = (el, project) => {
 const handleEnhancedHover = (event, project) => {
   const projectKey = `${project.id}-${project.gridX}-${project.gridY}`
   
+  // Apply GSAP hover animation
+  gallery.animateItemHover(event.currentTarget, project)
+  
   if (project.mediaType === 'video') {
     // Handle video hover - play in background immediately
     const videoElement = videoRefs.get(projectKey)
@@ -702,6 +722,9 @@ const handleEnhancedHover = (event, project) => {
 
 const handleEnhancedLeave = (event, project) => {
   const projectKey = `${project.id}-${project.gridX}-${project.gridY}`
+  
+  // Apply GSAP leave animation
+  gallery.animateItemLeave(event.currentTarget)
   
   if (project.mediaType === 'video') {
     // Handle video leave - pause and reset
@@ -778,88 +801,13 @@ const closeFullscreenVideo = () => {
   fullscreenVideo.value = null
 }
 
-// Throttled scroll update for better performance
-const updateScrollPosition = (deltaX, deltaY) => {
-  if (scrollUpdateThrottle.value) {
-    clearTimeout(scrollUpdateThrottle.value)
-  }
-  
-  scrollUpdateThrottle.value = setTimeout(() => {
-    scrollX.value += deltaX
-    scrollY.value += deltaY
-  }, 1) // Very small throttle for smooth scrolling
+// Playlist hover handlers
+const handlePlaylistHover = (playlist) => {
+  currentHoveredPlaylist.value = playlist
 }
 
-// Enhanced wheel scrolling for grid navigation
-const handleWheel = (event) => {
-  event.preventDefault()
-  
-  const sensitivity = 1.5 // Reduced sensitivity for grid navigation
-  
-  // Calculate deltas
-  let deltaX = event.deltaX * sensitivity
-  let deltaY = event.deltaY * sensitivity
-  
-  // Also allow horizontal scrolling with shift
-  if (event.shiftKey) {
-    deltaX += event.deltaY * sensitivity
-  }
-  
-  // Use throttled update for smooth performance
-  updateScrollPosition(deltaX, deltaY)
-}
-
-// Mouse drag controls
-const handleMouseDown = (event) => {
-  if (event.button === 0) {
-    isDragging.value = true
-    lastMouseX.value = event.clientX
-    lastMouseY.value = event.clientY
-    event.preventDefault()
-  }
-}
-
-const handleMouseMove = (event) => {
-  if (isDragging.value) {
-    const deltaX = event.clientX - lastMouseX.value
-    const deltaY = event.clientY - lastMouseY.value
-    
-    scrollX.value += deltaX * 2
-    scrollY.value += deltaY * 2
-    
-    lastMouseX.value = event.clientX
-    lastMouseY.value = event.clientY
-  }
-}
-
-const handleMouseUp = () => {
-  isDragging.value = false
-}
-
-// Touch controls
-const handleTouchStart = (event) => {
-  if (event.touches.length === 1) {
-    lastTouchX.value = event.touches[0].clientX
-    lastTouchY.value = event.touches[0].clientY
-  }
-}
-
-const handleTouchMove = (event) => {
-  event.preventDefault()
-  if (event.touches.length === 1) {
-    const deltaX = event.touches[0].clientX - lastTouchX.value
-    const deltaY = event.touches[0].clientY - lastTouchY.value
-    
-    scrollX.value += deltaX * 2
-    scrollY.value += deltaY * 2
-    
-    lastTouchX.value = event.touches[0].clientX
-    lastTouchY.value = event.touches[0].clientY
-  }
-}
-
-const handleTouchEnd = () => {
-  // Touch ended
+const handlePlaylistLeave = () => {
+  currentHoveredPlaylist.value = null
 }
 
 // Client-side dimensions to prevent hydration mismatch
@@ -1191,46 +1139,12 @@ const gridProjects = computed(() => {
   return grid
 })
 
-// Keyboard controls for hexagonal grid navigation
+// Enhanced keyboard controls using gallery
 const handleKeyDown = (event) => {
-  // Calculate responsive spacing for proper hexagonal layout
-  const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
-  const baseWidth = 280
-  const itemWidth = baseWidth * scale
-  
-  const horizontalSpeed = itemWidth * 0.75 // Perfect hexagon horizontal spacing
-  const verticalSpeed = itemWidth * 0.866 // Perfect hexagon vertical spacing
-  
-  switch (event.code) {
-    case 'ArrowUp':
-    case 'KeyW':
-      scrollY.value += verticalSpeed
-      event.preventDefault()
-      break
-    case 'ArrowDown':
-    case 'KeyS':
-      scrollY.value -= verticalSpeed
-      event.preventDefault()
-      break
-    case 'ArrowLeft':
-    case 'KeyA':
-      scrollX.value += horizontalSpeed
-      event.preventDefault()
-      break
-    case 'ArrowRight':
-    case 'KeyD':
-      scrollX.value -= horizontalSpeed
-      event.preventDefault()
-      break
-    case 'Space':
-      scrollX.value = 0
-      scrollY.value = 0
-      event.preventDefault()
-      break
-  }
+  gallery.handleKeyDown(event, clientWidth.value, clientHeight.value)
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (process.client) {
     // Update client dimensions to actual viewport size
     clientWidth.value = window.innerWidth
@@ -1248,11 +1162,10 @@ onMounted(() => {
     
     // Store resize handler for cleanup
     window._resizeHandler = handleResize
+    
+    // Initialize GSAP gallery functionality
+    await gallery.initializeGallery()
   }
-  
-  // Center the view on mount
-  scrollX.value = 0
-  scrollY.value = 0
 })
 
 onBeforeUnmount(() => {
@@ -1262,14 +1175,14 @@ onBeforeUnmount(() => {
       window.removeEventListener('resize', window._resizeHandler)
       delete window._resizeHandler
     }
-    // Clear any pending scroll updates
-    if (scrollUpdateThrottle.value) {
-      clearTimeout(scrollUpdateThrottle.value)
-    }
+    
     // Clear all image animation intervals
     imageAnimations.value.forEach(interval => clearInterval(interval))
     imageAnimations.value.clear()
     hoveredProjects.value.clear()
+    
+    // Cleanup GSAP gallery
+    gallery.cleanup()
   }
 })
 </script>
@@ -1292,25 +1205,25 @@ onBeforeUnmount(() => {
 
 .project-grid-item {
   display: block;
-  background: transparent; /* Remove black background - only show content */
+  background: transparent;
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
   /* Perfect hexagon shape using CSS clip-path */
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
   /* Ensure no margin or border that could create gaps */
   margin: 0;
   border: none;
-  /* Use transform3d for better performance */
+  /* Use transform3d for better performance with GSAP */
   transform: translate3d(0, 0, 0);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
   /* Ensure proper aspect ratio for hexagon */
-  aspect-ratio: 1.154; /* width/height ratio for proper hexagon */
+  aspect-ratio: 1.154;
+  /* Enhanced properties for GSAP animations */
+  will-change: transform, opacity;
+  perspective: 1000px;
 }
 
-.project-grid-item:hover {
-  transform: translate3d(0, -4px, 0);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-}
+/* GSAP handles all hover animations - no CSS hover needed */
 
 .hexagon-content {
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
@@ -1434,10 +1347,25 @@ onBeforeUnmount(() => {
   user-select: none;
 }
 
-/* Hardware acceleration */
+/* Enhanced hardware acceleration for GSAP */
 .showcase-wrapper {
   transform: translateZ(0);
   backface-visibility: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* GSAP animation classes */
+.gsap-fade-in {
+  opacity: 0;
+}
+
+.gsap-scale-up {
+  transform: scale(0.8);
+}
+
+.gsap-slide-up {
+  transform: translateY(50px);
 }
 
 /* Hide scrollbars */

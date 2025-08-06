@@ -7,6 +7,14 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss'
   ],
 
+  imports: {
+    dirs: [
+      // Scan all modules in composables directory
+      'composables/**',
+      'app/composables/**'
+    ]
+  },
+
   app: {
     head: {
       title: 'Rodeo Film',

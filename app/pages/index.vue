@@ -42,9 +42,10 @@
           cursor: isDragging ? 'grabbing' : 'grab'
         }"
       >
-        <!-- Grid Project Showcases -->
+        <!-- Grid Project Showcases - Only render items with actual media content -->
         <div 
           v-for="project in gridProjects" 
+          v-show="project.image || project.video || project.poster"
           :key="`showcase-${project.id}-${project.gridX}-${project.gridY}`"
           class="project-grid-item"
           :style="getGridPosition(project.gridX, project.gridY)"
@@ -709,26 +710,26 @@ const handleTouchEnd = () => {
 const clientWidth = ref(1920)
 const clientHeight = ref(1080)
 
-// Position each grid item in hexagonal honeycomb pattern (seamless)
+// Position each grid item in proper hexagonal honeycomb pattern
 const getGridPosition = (gridX, gridY) => {
   // Responsive sizing based on viewport
   const baseWidth = 280
-  const baseHeight = 240 // Slightly taller for hexagon shape
-  const gap = 0 // No gaps for seamless hexagon pattern
+  const baseHeight = Math.round(baseWidth / 1.154) // Perfect hexagon height ratio
   
   // Scale items based on viewport size
   const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
   const itemWidth = baseWidth * scale
   const itemHeight = baseHeight * scale
   
-  // Hexagonal positioning: offset every other row
-  const isOddRow = gridY % 2 === 1
-  // For seamless hexagons, horizontal spacing is 3/4 of width
+  // Perfect hexagonal tessellation calculations
+  // For a regular hexagon with width W, the horizontal spacing is W * 3/4
+  // and the vertical spacing is W * sqrt(3)/2 ≈ W * 0.866
   const horizontalSpacing = itemWidth * 0.75
-  const offsetX = isOddRow ? horizontalSpacing * 0.5 : 0
+  const verticalSpacing = itemWidth * 0.866 // Using width for perfect hexagon ratio
   
-  // Vertical spacing for seamless hexagons (roughly 87% of height)
-  const verticalSpacing = itemHeight * 0.87
+  // Hexagonal positioning: offset every other row by half horizontal spacing
+  const isOddRow = gridY % 2 === 1
+  const offsetX = isOddRow ? horizontalSpacing * 0.5 : 0
   
   return {
     position: 'absolute',
@@ -938,12 +939,12 @@ const playlists = [
 const gridProjects = computed(() => {
   const grid = []
   
-  // Calculate viewport bounds in grid coordinates
+  // Calculate viewport bounds in grid coordinates using proper hexagon math
   const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
   const itemWidth = 280 * scale
   const itemHeight = 240 * scale
   const horizontalSpacing = itemWidth * 0.75
-  const verticalSpacing = itemHeight * 0.87
+  const verticalSpacing = itemWidth * 0.866 // Perfect hexagon ratio
   
   // Calculate visible range with extra buffer for smooth scrolling
   const bufferMultiplier = 3
@@ -954,19 +955,22 @@ const gridProjects = computed(() => {
   const gridOffsetX = Math.floor(-scrollX.value / horizontalSpacing) - Math.floor(visibleColumns / 2)
   const gridOffsetY = Math.floor(-scrollY.value / verticalSpacing) - Math.floor(visibleRows / 2)
   
-  // Generate grid items in visible area plus buffer
+  // Generate grid items in visible area plus buffer - only show actual projects
   for (let x = gridOffsetX; x < gridOffsetX + visibleColumns; x++) {
     for (let y = gridOffsetY; y < gridOffsetY + visibleRows; y++) {
       // Use modulo to cycle through projects infinitely
       const projectIndex = ((Math.abs(x) + Math.abs(y)) % projects.length)
       const project = projects[projectIndex]
       
-      grid.push({
-        ...project,
-        gridX: x,
-        gridY: y,
-        id: `${project.id}-${x}-${y}`
-      })
+      // Only add hexagons that have actual content (image or video)
+      if (project && (project.image || project.video || project.poster)) {
+        grid.push({
+          ...project,
+          gridX: x,
+          gridY: y,
+          id: `${project.id}-${x}-${y}`
+        })
+      }
     }
   }
   
@@ -975,15 +979,13 @@ const gridProjects = computed(() => {
 
 // Keyboard controls for hexagonal grid navigation
 const handleKeyDown = (event) => {
-  // Calculate responsive spacing for hexagonal layout
+  // Calculate responsive spacing for proper hexagonal layout
   const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
   const baseWidth = 280
-  const baseHeight = 240
   const itemWidth = baseWidth * scale
-  const itemHeight = baseHeight * scale
   
-  const horizontalSpeed = itemWidth * 0.75 // Seamless hexagon horizontal spacing
-  const verticalSpeed = itemHeight * 0.87 // Seamless hexagon vertical spacing
+  const horizontalSpeed = itemWidth * 0.75 // Perfect hexagon horizontal spacing
+  const verticalSpeed = itemWidth * 0.866 // Perfect hexagon vertical spacing
   
   switch (event.code) {
     case 'ArrowUp':
@@ -1072,15 +1074,18 @@ onBeforeUnmount(() => {
 
 .project-grid-item {
   display: block;
-  background: #000;
+  background: transparent; /* Remove black background - only show content */
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  /* Perfect hexagon shape using CSS clip-path */
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
   /* Ensure no margin or border that could create gaps */
   margin: 0;
   border: none;
   /* Use transform3d for better performance */
   transform: translate3d(0, 0, 0);
+  /* Ensure proper aspect ratio for hexagon */
+  aspect-ratio: 1.154; /* width/height ratio for proper hexagon */
 }
 
 .project-grid-item:hover {
@@ -1090,12 +1095,12 @@ onBeforeUnmount(() => {
 }
 
 .hexagon-content {
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 }
 
 .hexagon-content video,
 .hexagon-content img {
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 }
 
 /* Mobile responsive adjustments */

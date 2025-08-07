@@ -118,6 +118,19 @@
       </Teleport>
     </div>
 
+    <!-- Rodeo Film Style Footer -->
+    <footer id="js-footer" class="o-footer">
+      <div class="hide-first">
+        <div class="copy a-footerText">
+          © 2024 Rodeo, all rights reserved.
+        </div>
+        <div class="legas">
+          <a class="a-footerText" href="https://rodeo.film/legals">Legals</a> —
+          <a class="a-footerText" href="https://troa.fr" target="_blank">Website by TROA</a>
+        </div>
+      </div>
+    </footer>
+
     <!-- Side Menu Overlay -->
     <Transition name="menu">
       <div v-if="menuOpen" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-lg">
@@ -1535,6 +1548,87 @@ onBeforeUnmount(() => {
 .project-grid-item .absolute.inset-0.flex {
   transform: scale(0.95);
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Mobile responsive adjustments for large hexagons and performance */
+@media (max-width: 768px) {
+  .showcase-container {
+    /* Enhanced mobile performance */
+    -webkit-overflow-scrolling: touch;
+    touch-action: none;
+  }
+}
+
+/* Rodeo Film Style Footer */
+.o-footer {
+  position: fixed;
+  right: 8rem;
+  bottom: 6rem;
+  transform: rotate(-90deg) translate(100%);
+  transform-origin: bottom right;
+  z-index: 100;
+  padding: 20px 40px;
+  background: transparent;
+  pointer-events: none;
+}
+
+.o-footer .hide-first {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.o-footer .copy {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+}
+
+.o-footer .legas {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+}
+
+.o-footer .a-footerText {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: color 0.3s ease;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.o-footer .a-footerText:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+/* Mobile responsive footer */
+@media (max-width: 768px) {
+  .o-footer {
+    padding: 15px 20px;
+  }
+  
+  .o-footer .hide-first {
+    gap: 6px;
+    text-align: center;
+  }
+  
+  .o-footer .copy,
+  .o-footer .legas,
+  .o-footer .a-footerText {
+    font-size: 11px;
+  }
 }
 
 /* Mobile responsive adjustments for large hexagons and performance */

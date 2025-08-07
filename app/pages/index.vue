@@ -49,10 +49,9 @@
           cursor: isDragging ? 'grabbing' : 'grab'
         }"
       >
-        <!-- Grid Project Showcases - Only render items with actual media content -->
+        <!-- Grid Project Showcases - Always visible hexagons -->
         <div 
           v-for="project in gridProjects" 
-          v-show="project.image || project.video || project.poster"
           :key="`showcase-${project.id}-${project.gridX}-${project.gridY}`"
           class="project-grid-item cursor-pointer"
           :style="getGridPosition(project.gridX, project.gridY)"
@@ -65,7 +64,7 @@
           <div class="relative w-full h-full overflow-hidden group grid-content">
             <!-- Conditional rendering for video or image with lazy loading -->
             <video
-              v-if="project.mediaType === 'video' && isVideoInViewport(project)"
+              v-if="project.mediaType === 'video'"
               :poster="project.poster"
               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               muted
@@ -77,13 +76,6 @@
               <!-- Fallback to poster image if video fails -->
               <img :src="project.poster" :alt="project.showcase_title" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
             </video>
-            <!-- Show poster image for videos not in viewport -->
-            <img
-              v-else-if="project.mediaType === 'video'"
-              :src="project.poster"
-              :alt="project.showcase_title"
-              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
             <img
               v-else
               :src="getCurrentImageSrc(project)"
@@ -1327,15 +1319,13 @@ const gridProjects = computed(() => {
       const projectIndex = ((Math.abs(x) + Math.abs(y)) % projects.length)
       const project = projects[projectIndex]
       
-      // Only add hexagons that have actual content (image or video)
-      if (project && (project.image || project.video || project.poster)) {
-        grid.push({
-          ...project,
-          gridX: x,
-          gridY: y,
-          id: `${project.id}-${x}-${y}`
-        })
-      }
+      // Always add hexagons with content (all projects have content)
+      grid.push({
+        ...project,
+        gridX: x,
+        gridY: y,
+        id: `${project.id}-${x}-${y}`
+      })
     }
   }
   
@@ -1451,8 +1441,8 @@ onBeforeUnmount(() => {
   overflow: hidden;
   /* Large hexagon shape for impressive visual impact */
   clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
-  /* Initial state for professional entrance animation */
-  opacity: 0;
+  /* Always visible hexagons */
+  opacity: 1;
   /* Optimize for animations and mobile performance */
   will-change: transform, opacity, filter;
   -webkit-backface-visibility: hidden;

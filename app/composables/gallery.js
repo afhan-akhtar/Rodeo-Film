@@ -20,20 +20,20 @@ export const useGallery = () => {
   
   // Ultra-fluid smooth scrolling configuration
   const config = {
-    smoothness: 0.06,    // Ultra-fluid interpolation
-    trackpadMultiplier: 1.6, // Refined trackpad sensitivity
-    touchMultiplier: 2.0, // Refined touch sensitivity for mobile
-    maxVelocity: 120,    // Controlled speed limit
+    smoothness: 0.08,    // More fluid interpolation
+    trackpadMultiplier: 2.0, // Increased trackpad sensitivity
+    touchMultiplier: 2.5, // Increased touch sensitivity for mobile
+    maxVelocity: 150,    // Higher speed limit for smoother movement
     directControl: true, // Enable direct speed control
     boundaries: {
-      minX: -25000,
-      maxX: 25000,
-      minY: -25000,
-      maxY: 25000
+      minX: -30000,
+      maxX: 30000,
+      minY: -30000,
+      maxY: 30000
     },
     mobile: {
-      smoothness: 0.09,    // Ultra-fluid for mobile
-      touchMultiplier: 2.2, // Refined touch sensitivity
+      smoothness: 0.12,    // More fluid for mobile
+      touchMultiplier: 3.0, // Increased touch sensitivity
     },
     lenis: {
       duration: 1.2,
@@ -77,26 +77,26 @@ export const useGallery = () => {
     scrollX.value += deltaX
     scrollY.value += deltaY
 
-    // Ultra-fluid boundary handling
+    // Ultra-fluid boundary handling with smoother elasticity
     if (scrollX.value < config.boundaries.minX) {
       const overflow = config.boundaries.minX - scrollX.value
-      scrollX.value += overflow * 0.08
-      targetX += overflow * 0.04
+      scrollX.value += overflow * 0.12
+      targetX += overflow * 0.06
     }
     if (scrollX.value > config.boundaries.maxX) {
       const overflow = scrollX.value - config.boundaries.maxX
-      scrollX.value -= overflow * 0.08
-      targetX -= overflow * 0.04
+      scrollX.value -= overflow * 0.12
+      targetX -= overflow * 0.06
     }
     if (scrollY.value < config.boundaries.minY) {
       const overflow = config.boundaries.minY - scrollY.value
-      scrollY.value += overflow * 0.08
-      targetY += overflow * 0.04
+      scrollY.value += overflow * 0.12
+      targetY += overflow * 0.06
     }
     if (scrollY.value > config.boundaries.maxY) {
       const overflow = scrollY.value - config.boundaries.maxY
-      scrollY.value -= overflow * 0.08
-      targetY -= overflow * 0.04
+      scrollY.value -= overflow * 0.12
+      targetY -= overflow * 0.06
     }
 
     // Always continue animation for ultra-fluid movement
@@ -156,36 +156,33 @@ export const useGallery = () => {
   const handleWheel = (event) => {
     event.preventDefault()
     
-    // Detect trackpad vs mouse wheel (trackpad has smaller, more frequent deltas)
+    // Allow both trackpad and mouse wheel for more fluid scrolling
     const isTrackpad = Math.abs(event.deltaY) < 50 && Math.abs(event.deltaX) < 50
-    
-    // Only allow trackpad scrolling (two-finger), block mouse wheel
-    if (!isTrackpad) {
-      return // Block single mouse wheel scrolling
-    }
+    const isMouseWheel = !isTrackpad
     
     const currentTime = performance.now()
     const isMobile = window.innerWidth < 768
-    const sensitivity = config.trackpadMultiplier * (isMobile ? 1.2 : 1.0)
+    const sensitivity = isTrackpad ? config.trackpadMultiplier : config.trackpadMultiplier * 0.8
+    const adjustedSensitivity = sensitivity * (isMobile ? 1.2 : 1.0)
     
     // Calculate smooth speed based on delta magnitude and time
     const timeDelta = currentTime - lastTrackpadTime
     
     if (timeDelta > 0) {
       // Smooth speed calculation - higher delta = faster movement
-      const speedX = Math.abs(event.deltaX) / (timeDelta + 1) // Add 1 to prevent division by 0
+      const speedX = Math.abs(event.deltaX) / (timeDelta + 1)
       const speedY = Math.abs(event.deltaY) / (timeDelta + 1)
       
       // Update current speed with smoothing
-      currentTrackpadSpeed.x = currentTrackpadSpeed.x * 0.7 + speedX * 0.3
-      currentTrackpadSpeed.y = currentTrackpadSpeed.y * 0.7 + speedY * 0.3
+      currentTrackpadSpeed.x = currentTrackpadSpeed.x * 0.8 + speedX * 0.2
+      currentTrackpadSpeed.y = currentTrackpadSpeed.y * 0.8 + speedY * 0.2
       
       // Calculate speed multiplier based on movement velocity
-      const speedMultiplier = Math.min((currentTrackpadSpeed.x + currentTrackpadSpeed.y) / 3, 2) // Cap at 2x
+      const speedMultiplier = Math.min((currentTrackpadSpeed.x + currentTrackpadSpeed.y) / 2, 1.5)
       
       // Apply smooth movement with speed-based multiplier
-      const deltaX = event.deltaX * sensitivity * (1 + speedMultiplier * 0.3)
-      const deltaY = event.deltaY * sensitivity * (1 + speedMultiplier * 0.3)
+      const deltaX = event.deltaX * adjustedSensitivity * (1 + speedMultiplier * 0.2)
+      const deltaY = event.deltaY * adjustedSensitivity * (1 + speedMultiplier * 0.2)
 
       // Smooth movement
       targetX -= deltaX
@@ -200,7 +197,7 @@ export const useGallery = () => {
     clearTimeout(inertiaTimeout)
     inertiaTimeout = setTimeout(() => {
       applyTrackpadInertia()
-    }, 60)
+    }, 80)
   }
 
   // Minimal smooth inertia for natural feel
@@ -590,10 +587,10 @@ export const useGallery = () => {
       filter: 'blur(10px)'
     })
     gsap.set('.project-grid-item', { 
-      opacity: 0,
-      scale: 0.95,
-      y: 20,
-      filter: 'blur(5px)'
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      filter: 'none'
     })
     
     // Create professional timeline
@@ -617,21 +614,15 @@ export const useGallery = () => {
       ease: "power3.out"
     })
     
-    // Staggered grid items animation - Rodeo Film style
+    // Grid items are already visible - just ensure smooth appearance
     .to('.project-grid-item', {
       opacity: 1,
       scale: 1,
       y: 0,
-      filter: 'blur(0px)',
-      duration: 1.2,
-      stagger: {
-        amount: 2.0,
-        from: "center",
-        grid: "auto",
-        ease: "power2.inOut"
-      },
-      ease: "power3.out"
-    }, "-=1.0") // Start 1s before container finishes
+      filter: 'none',
+      duration: 0.5,
+      ease: "power2.out"
+    }, "-=0.5") // Quick appearance
     
     return tl
   }

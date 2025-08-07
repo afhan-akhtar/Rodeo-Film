@@ -33,7 +33,6 @@
     <!-- Full Screen Honeycomb Showcase -->
     <div 
       class="showcase-container"
-      style="transform: scale(1.1) rotate(3deg);"
       @wheel="gallery.handleWheel" 
       @mousedown="gallery.handleMouseDown"
       @mousemove="gallery.handleMouseMove"
@@ -43,13 +42,13 @@
       @touchmove="gallery.handleTouchMove"
       @touchend="gallery.handleTouchEnd"
     >
-      <div 
-        class="showcase-wrapper" 
-        :style="{ 
-          transform: `translate3d(${scrollX}px, ${scrollY}px, 0)`,
-          cursor: isDragging ? 'grabbing' : 'grab'
-        }"
-      >
+              <div 
+          class="showcase-wrapper" 
+          :style="{ 
+            transform: `translate3d(${scrollX}px, ${scrollY}px, 0) scale(1.1) rotate(3deg)`,
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }"
+        >
         <!-- Grid Project Showcases - Always visible hexagons -->
         <div 
           v-for="project in gridProjects" 

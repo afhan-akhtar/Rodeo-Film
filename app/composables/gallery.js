@@ -18,13 +18,13 @@ export const useGallery = () => {
   const smoothScrollContainer = ref(null)
   const lenisInstance = ref(null)
   
-  // Rodeo Film style ultra-smooth scrolling configuration
+  // Fast and responsive scrolling configuration
   const config = {
-    smoothness: 0.045,  // Ultra-smooth like Rodeo Film
-    damping: 0.92,      // High damping for refined motion
-    maxVelocity: 120,   // Higher velocity for responsive feel
-    inertiaDelay: 30,   // Immediate response
-    mouseMultiplier: 0.8, // Mouse sensitivity multiplier
+    smoothness: 0.15,   // Much faster response
+    damping: 0.75,      // Reduced damping for quicker movement
+    maxVelocity: 200,   // Higher velocity for responsive feel
+    inertiaDelay: 100,  // Slightly more delay to prevent excessive calculations
+    mouseMultiplier: 2.5, // Much higher sensitivity for direct control
     boundaries: {
       minX: -25000,    // Infinite-feeling boundaries
       maxX: 25000,
@@ -60,39 +60,35 @@ export const useGallery = () => {
   let inertiaTimeout = null
   let gsapTween = null
 
-  // Rodeo Film style ultra-smooth scrolling animation loop
+  // Fast and lightweight scrolling animation loop
   const updateSmoothScroll = () => {
-    // Ultra-smooth interpolation with Rodeo Film precision
+    // Fast interpolation for immediate response
     const deltaX = (targetX - scrollX.value) * config.smoothness
     const deltaY = (targetY - scrollY.value) * config.smoothness
 
     scrollX.value += deltaX
     scrollY.value += deltaY
 
-    // Apply boundaries with elastic effect (softer than before)
+    // Simplified boundary check (less computation)
     if (scrollX.value < config.boundaries.minX) {
-      const overflow = config.boundaries.minX - scrollX.value
-      scrollX.value += overflow * 0.05
-      targetX += overflow * 0.05
+      scrollX.value = config.boundaries.minX
+      targetX = config.boundaries.minX
     }
     if (scrollX.value > config.boundaries.maxX) {
-      const overflow = scrollX.value - config.boundaries.maxX
-      scrollX.value -= overflow * 0.05
-      targetX -= overflow * 0.05
+      scrollX.value = config.boundaries.maxX
+      targetX = config.boundaries.maxX
     }
     if (scrollY.value < config.boundaries.minY) {
-      const overflow = config.boundaries.minY - scrollY.value
-      scrollY.value += overflow * 0.05
-      targetY += overflow * 0.05
+      scrollY.value = config.boundaries.minY
+      targetY = config.boundaries.minY
     }
     if (scrollY.value > config.boundaries.maxY) {
-      const overflow = scrollY.value - config.boundaries.maxY
-      scrollY.value -= overflow * 0.05
-      targetY -= overflow * 0.05
+      scrollY.value = config.boundaries.maxY
+      targetY = config.boundaries.maxY
     }
 
-    // Continue animation with higher precision threshold
-    if (Math.abs(deltaX) > 0.05 || Math.abs(deltaY) > 0.05 || isInertiaActive.value) {
+    // Continue animation with lower threshold for better performance
+    if (Math.abs(deltaX) > 0.2 || Math.abs(deltaY) > 0.2 || isInertiaActive.value) {
       animationFrame = requestAnimationFrame(updateSmoothScroll)
     }
   }
@@ -131,38 +127,29 @@ export const useGallery = () => {
 
 
 
-  // Rodeo Film style ultra-smooth wheel scrolling with physics-based momentum
+  // Fast and responsive wheel scrolling
   const handleWheel = (event) => {
     event.preventDefault()
     
-    // Rodeo Film style sensitivity with refined control
-    const sensitivity = config.mouseMultiplier * 1.8
+    // Direct and responsive sensitivity
+    const sensitivity = config.mouseMultiplier
     let deltaX = event.deltaX * sensitivity
     let deltaY = event.deltaY * sensitivity
 
-    // Smooth omnidirectional scrolling with natural physics
+    // Simple omnidirectional scrolling
     if (event.shiftKey) {
       // Pure horizontal scrolling
       deltaX += event.deltaY * sensitivity
       deltaY = 0
-    } else {
-      // Natural diagonal movement for engaging exploration
-      if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-        deltaX += event.deltaY * 0.25 // Subtle diagonal bias
-      }
     }
 
-    // Apply Rodeo Film style smooth momentum with physics
-    const currentVelX = velocity.value.x
-    const currentVelY = velocity.value.y
-    
-    // Add acceleration instead of direct position change
-    velocity.value.x = currentVelX * 0.85 + (-deltaX * 0.12)
-    velocity.value.y = currentVelY * 0.85 + (-deltaY * 0.12)
-    
-    // Update target positions with momentum
-    targetX += velocity.value.x * 8
-    targetY += velocity.value.y * 8
+    // Direct position update for immediate response
+    targetX -= deltaX
+    targetY -= deltaY
+
+    // Update velocity for simple inertia
+    velocity.value.x = -deltaX * 0.3
+    velocity.value.y = -deltaY * 0.3
 
     // Clear any existing inertia animations
     if (gsapTween) {
@@ -172,28 +159,28 @@ export const useGallery = () => {
 
     startSmoothScroll()
 
-    // Rodeo Film style continuous momentum decay
+    // Simple inertia with timeout
     clearTimeout(inertiaTimeout)
     inertiaTimeout = setTimeout(() => {
-      applyPhysicsBasedInertia()
+      applySimpleInertia()
     }, config.inertiaDelay)
   }
 
-  // Physics-based inertia similar to Rodeo Film
-  const applyPhysicsBasedInertia = () => {
+  // Simple and fast inertia
+  const applySimpleInertia = () => {
     const velMagnitude = Math.sqrt(velocity.value.x ** 2 + velocity.value.y ** 2)
     
-    if (velMagnitude > 0.5) {
+    if (velMagnitude > 1) {
       isInertiaActive.value = true
       
       gsapTween = gsap.to(velocity.value, {
         x: 0,
         y: 0,
-        duration: 2.5,
-        ease: "power3.out",
+        duration: 1.2,
+        ease: "power2.out",
         onUpdate: () => {
-          targetX += velocity.value.x * 6
-          targetY += velocity.value.y * 6
+          targetX += velocity.value.x * 2
+          targetY += velocity.value.y * 2
         },
         onComplete: () => {
           isInertiaActive.value = false
@@ -225,14 +212,14 @@ export const useGallery = () => {
       const deltaX = event.clientX - lastMouseX
       const deltaY = event.clientY - lastMouseY
       
-      // Rodeo Film style refined drag sensitivity
-      const dragMultiplier = config.mouseMultiplier * 4
+      // Direct and responsive drag
+      const dragMultiplier = config.mouseMultiplier * 2
       targetX += deltaX * dragMultiplier
       targetY += deltaY * dragMultiplier
       
-      // Smooth velocity update for natural momentum
-      velocity.value.x = deltaX * 1.2
-      velocity.value.y = deltaY * 1.2
+      // Simple velocity update
+      velocity.value.x = deltaX * 0.5
+      velocity.value.y = deltaY * 0.5
       
       lastMouseX = event.clientX
       lastMouseY = event.clientY
@@ -244,8 +231,8 @@ export const useGallery = () => {
   const handleMouseUp = () => {
     if (isDragging.value) {
       isDragging.value = false
-      // Apply Rodeo Film style physics-based inertia
-      applyPhysicsBasedInertia()
+      // Apply simple inertia
+      applySimpleInertia()
     }
   }
 
@@ -269,14 +256,14 @@ export const useGallery = () => {
       const deltaX = event.touches[0].clientX - lastTouchX
       const deltaY = event.touches[0].clientY - lastTouchY
       
-      // Rodeo Film style touch sensitivity
-      const touchMultiplier = config.mouseMultiplier * 3
+      // Simple touch sensitivity
+      const touchMultiplier = config.mouseMultiplier * 1.5
       targetX += deltaX * touchMultiplier
       targetY += deltaY * touchMultiplier
       
-      // Update velocity for physics-based momentum
-      velocity.value.x = deltaX * 0.8
-      velocity.value.y = deltaY * 0.8
+      // Simple velocity update
+      velocity.value.x = deltaX * 0.4
+      velocity.value.y = deltaY * 0.4
       
       lastTouchX = event.touches[0].clientX
       lastTouchY = event.touches[0].clientY
@@ -286,8 +273,8 @@ export const useGallery = () => {
   }
 
   const handleTouchEnd = () => {
-    // Apply Rodeo Film style inertia after touch release
-    applyPhysicsBasedInertia()
+    // Apply simple inertia after touch release
+    applySimpleInertia()
   }
 
   // Enhanced keyboard navigation for large hexagons

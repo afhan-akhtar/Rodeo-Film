@@ -22,7 +22,7 @@
         </svg>
         
         <!-- Hamburger Menu -->
-        <button v-if="!projectsOpen && !currentPlayingProject && !awardsOpen && !playlistOpen && !aboutOpen" class="hamburger-menu p-2" @click="toggleMenu">
+        <button v-if="!projectsOpen && !currentPlayingProject && !awardsOpen && !playlistOpen && !aboutOpen && !galleryOpen" class="hamburger-menu p-2" @click="toggleMenu">
           <div class="w-6 h-0.5 bg-white mb-1.5 transition-all duration-300"></div>
           <div class="w-6 h-0.5 bg-white mb-1.5 transition-all duration-300"></div>
           <div class="w-6 h-0.5 bg-white transition-all duration-300"></div>
@@ -151,7 +151,7 @@
                       <nav class="text-center space-y-4">
               <button @click="toggleProjects" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">PROJECTS</button>
               <button @click="toggleAwards" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">AWARDS</button>
-              <a href="#" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 hover-glow backdrop-blur-sm" style="font-size: 12px;">GALLERY</a>
+              <button @click="toggleGallery" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">GALLERY</button>
               <button @click="togglePlaylist" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">PLAYLIST</button>
               <button @click="toggleAbout" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">ABOUT</button>
             </nav>
@@ -300,6 +300,63 @@
 <button 
   v-if="awardsOpen"
   @click="closeAwards" 
+  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+>
+  <div class="relative w-6 h-6">
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
+    <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform -rotate-45 -translate-y-0.5"></div>
+  </div>
+</button>
+
+<!-- Gallery Overlay -->
+<Transition name="gallery">
+  <div v-if="galleryOpen" class="fixed inset-0 z-40 bg-black">
+    <!-- Gallery Container -->
+    <div class="relative z-10 flex flex-col items-center justify-center h-full p-12">
+      <div class="text-center w-full h-full flex flex-col">
+        <h2 class="font-bold tracking-wider text-white mb-8 hover:text-red-100 transition-colors duration-300" style="font-size: 16px;">
+          GALLERY
+        </h2>
+        
+        <!-- WebGL Style Gallery Container -->
+        <div class="flex-1 relative w-full h-full">
+          <div class="gallery-webgl-container">
+            <div 
+              v-for="(image, index) in getAllGalleryImages()" 
+              :key="`${image.projectId}-${image.imageIndex || 0}`"
+              class="gallery-webgl-item"
+              :style="getGalleryItemStyle(index)"
+              @mouseenter="handleGalleryItemHover($event, index)"
+              @mouseleave="handleGalleryItemLeave($event, index)"
+              @click="gallery.expandImage({ 
+                mediaType: 'image', 
+                images: [image.src], 
+                showcase_title: image.title 
+              }, $event)"
+            >
+              <div class="gallery-item-wrapper">
+                <img 
+                  :src="image.src" 
+                  :alt="image.title"
+                  class="gallery-item-image"
+                />
+                <div class="gallery-item-overlay">
+                  <div class="gallery-item-title">{{ image.title }}</div>
+                  <div class="gallery-item-client">{{ image.client }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Transition>
+
+<!-- ✅ Close Button: only shows when galleryOpen is true -->
+<button 
+  v-if="galleryOpen"
+  @click="closeGallery" 
   class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
 >
   <div class="relative w-6 h-6">
@@ -585,6 +642,7 @@ const projectsOpen = ref(false)
 const awardsOpen = ref(false)
 const playlistOpen = ref(false)
 const aboutOpen = ref(false)
+const galleryOpen = ref(false)
 const currentHoveredProject = ref(null)
 const currentPlayingProject = ref(null)
 const currentHoveredAward = ref(null)
@@ -624,22 +682,51 @@ const toggleMenu = () => {
 
 const toggleProjects = () => {
   projectsOpen.value = !projectsOpen.value
+  if (projectsOpen.value) {
+    awardsOpen.value = false
+    playlistOpen.value = false
+    aboutOpen.value = false
+    galleryOpen.value = false
+  }
   menuOpen.value = false // Close main menu when opening projects
 }
 
 const toggleAwards = () => {
   awardsOpen.value = !awardsOpen.value
+  if (awardsOpen.value) {
+    projectsOpen.value = false
+    playlistOpen.value = false
+    aboutOpen.value = false
+    galleryOpen.value = false
+  }
   menuOpen.value = false // Close main menu when opening awards
 }
 
 const togglePlaylist = () => {
   playlistOpen.value = !playlistOpen.value
+  if (playlistOpen.value) {
+    projectsOpen.value = false
+    awardsOpen.value = false
+    aboutOpen.value = false
+    galleryOpen.value = false
+  }
   menuOpen.value = false // Close main menu when opening playlist
 }
 
 const toggleAbout = () => {
   aboutOpen.value = !aboutOpen.value
+  if (aboutOpen.value) {
+    projectsOpen.value = false
+    awardsOpen.value = false
+    playlistOpen.value = false
+    galleryOpen.value = false
+  }
   menuOpen.value = false // Close main menu when opening about
+}
+
+const toggleGallery = () => {
+  galleryOpen.value = !galleryOpen.value
+  menuOpen.value = false // Close main menu when opening gallery
 }
 
 const closeProjects = () => {
@@ -660,6 +747,135 @@ const closePlaylist = () => {
 
 const closeAbout = () => {
   aboutOpen.value = false
+}
+
+const closeGallery = () => {
+  galleryOpen.value = false
+}
+
+// WebGL-style gallery positioning and hover effects
+const getGalleryItemStyle = (index) => {
+  const images = getAllGalleryImages()
+  const totalImages = images.length
+  
+  // Calculate 3D positioning similar to individual project galleries
+  const baseX = 200 + (index * 60)
+  const baseY = 150 + (index * 40)
+  const baseZ = index * -30 // Negative Z for depth
+  
+  // Adjust for viewport size
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+  
+  // Scale positioning based on viewport
+  const scaleX = viewportWidth / 1200
+  const scaleY = viewportHeight / 800
+  
+  const adjustedX = baseX * scaleX
+  const adjustedY = baseY * scaleY
+  
+  return {
+    position: 'absolute',
+    width: '400px',
+    height: '300px',
+    transform: `translate3d(${adjustedX}px, ${adjustedY}px, ${baseZ}px) rotateY(${index * 3}deg)`,
+    zIndex: index + 1,
+    transition: 'all 0.4s cubic-bezier(0.43, 0.01, 0.36, 1.27)',
+    cursor: 'pointer'
+  }
+}
+
+const handleGalleryItemHover = (event, index) => {
+  const element = event.currentTarget
+  const images = getAllGalleryImages()
+  
+  // Bring to front with 3D lift
+  element.style.zIndex = '999'
+  gsap.to(element, {
+    scale: 1.15,
+    z: 100,
+    rotationY: 0,
+    duration: 0.4,
+    ease: "power2.out"
+  })
+  
+  // Add subtle glow effect
+  element.style.boxShadow = '0 30px 100px rgba(255, 255, 255, 0.2), 0 25px 80px rgba(0, 0, 0, 0.6)'
+}
+
+const handleGalleryItemLeave = (event, index) => {
+  const element = event.currentTarget
+  const images = getAllGalleryImages()
+  
+  // Calculate original position
+  const baseX = 200 + (index * 60)
+  const baseY = 150 + (index * 40)
+  const baseZ = index * -30
+  
+  const viewportWidth = window.innerWidth
+  const viewportHeight = window.innerHeight
+  const scaleX = viewportWidth / 1200
+  const scaleY = viewportHeight / 800
+  
+  const adjustedX = baseX * scaleX
+  const adjustedY = baseY * scaleY
+  
+  // Return to original position
+  gsap.to(element, {
+    scale: 1,
+    z: baseZ,
+    rotationY: index * 3,
+    duration: 0.4,
+    ease: "power2.out"
+  })
+  
+  // Reset z-index and shadow
+  element.style.zIndex = index + 1
+  element.style.boxShadow = '0 25px 80px rgba(0, 0, 0, 0.6)'
+}
+
+// Collect all images from all projects for the gallery
+const getAllGalleryImages = () => {
+  const allImages = []
+  
+  projects.forEach(project => {
+    if (project.mediaType === 'video') {
+      // Add video poster
+      allImages.push({
+        src: project.poster,
+        title: project.showcase_title,
+        client: project.client,
+        director: project.director,
+        category: project.category,
+        projectId: project.id
+      })
+    } else if (project.images && project.images.length > 0) {
+      // Add all images from the project
+      project.images.forEach((imageSrc, index) => {
+        allImages.push({
+          src: imageSrc,
+          title: `${project.showcase_title} - ${index + 1}`,
+          client: project.client,
+          director: project.director,
+          category: project.category,
+          projectId: project.id,
+          imageIndex: index
+        })
+      })
+    } else if (project.image) {
+      // Add single image
+      allImages.push({
+        src: project.image,
+        title: project.showcase_title,
+        client: project.client,
+        director: project.director,
+        category: project.category,
+        projectId: project.id
+      })
+    }
+  })
+  
+  return allImages
 }
 
 const handleProjectHover = async (project) => {
@@ -916,6 +1132,11 @@ const handleProjectClick = (eventOrProject, project) => {
     }
     if (actualEvent) {
       actualEvent.stopPropagation()
+    }
+  } else {
+    // For images, use the Rodeo Film-style gallery
+    if (actualEvent) {
+      gallery.expandImage(actualProject, actualEvent)
     }
   }
 }
@@ -1669,6 +1890,62 @@ onBeforeUnmount(() => {
   }
 }
 
+/* Rodeo Film-style Gallery Overlay */
+.rodeo-gallery-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.rodeo-gallery-container {
+  position: relative;
+  width: 800px;
+  height: 600px;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.rodeo-image-wrapper {
+  position: absolute;
+  width: 350px;
+  height: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+  transition: all 0.4s cubic-bezier(0.43, 0.01, 0.36, 1.27);
+  will-change: transform, z-index;
+  cursor: pointer;
+  transform-style: preserve-3d;
+}
+
+.rodeo-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.rodeo-image-wrapper:hover {
+  transform: scale(1.15) translateZ(100px) rotateY(0deg) !important;
+  box-shadow: 0 30px 100px rgba(255, 255, 255, 0.2), 0 25px 80px rgba(0, 0, 0, 0.6);
+  z-index: 999 !important;
+}
+
+.rodeo-image-wrapper:hover img {
+  transform: scale(1.02);
+}
+
 /* Menu Transitions */
 .menu-enter-active,
 .menu-leave-active {
@@ -1715,6 +1992,94 @@ onBeforeUnmount(() => {
 .playlist-leave-to {
   opacity: 0;
   backdrop-filter: blur(0px);
+}
+
+/* Gallery Transitions */
+.gallery-enter-active,
+.gallery-leave-active {
+  transition: all 0.4s ease;
+}
+
+.gallery-enter-from,
+.gallery-leave-to {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+}
+
+/* WebGL Style Gallery */
+.gallery-webgl-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  overflow: hidden;
+}
+
+.gallery-webgl-item {
+  position: absolute;
+  width: 400px;
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+  transition: all 0.4s cubic-bezier(0.43, 0.01, 0.36, 1.27);
+  will-change: transform, z-index;
+  cursor: pointer;
+  transform-style: preserve-3d;
+}
+
+.gallery-item-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.gallery-item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.gallery-item-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  color: white;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.gallery-webgl-item:hover .gallery-item-overlay {
+  opacity: 1;
+}
+
+.gallery-item-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.gallery-item-client {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.gallery-webgl-item:hover {
+  transform: scale(1.15) translateZ(100px) rotateY(0deg) !important;
+  box-shadow: 0 30px 100px rgba(255, 255, 255, 0.2), 0 25px 80px rgba(0, 0, 0, 0.6);
+  z-index: 999 !important;
+}
+
+.gallery-webgl-item:hover .gallery-item-image {
+  transform: scale(1.02);
 }
 
 /* About Transitions */

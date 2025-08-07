@@ -352,6 +352,214 @@ export const useGallery = () => {
     }
   }
 
+  // Rodeo Film-style WebGL gallery functionality for images with 3D overlap
+  const expandImage = (project, event) => {
+    if (!project || !event) return
+    
+    const clickedElement = event.currentTarget
+    const rect = clickedElement.getBoundingClientRect()
+    
+    // Get all images from the project
+    const images = project.mediaType === 'video' 
+      ? [project.poster] 
+      : (project.images && project.images.length > 0) 
+        ? project.images 
+        : [project.image || project.poster]
+    
+    // Create Rodeo Film-style gallery overlay
+    const overlay = document.createElement('div')
+    overlay.className = 'rodeo-gallery-overlay'
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: none;
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+    `
+    
+    // Create gallery container with 3D perspective
+    const container = document.createElement('div')
+    container.className = 'rodeo-gallery-container'
+    container.style.cssText = `
+      position: relative;
+      width: 800px;
+      height: 600px;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+    `
+    
+    // Create and position images with 3D overlap
+    images.forEach((imageSrc, index) => {
+      const wrapper = document.createElement('div')
+      wrapper.className = 'rodeo-image-wrapper'
+      wrapper.style.cssText = `
+        position: absolute;
+        width: 350px;
+        height: 250px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+        transition: all 0.4s cubic-bezier(0.43, 0.01, 0.36, 1.27);
+        will-change: transform, z-index;
+        cursor: pointer;
+        z-index: ${index + 1};
+        transform-style: preserve-3d;
+      `
+      
+      // Position images with 3D overlap - create a stack effect
+      const baseX = 200 + (index * 40)
+      const baseY = 150 + (index * 25)
+      const baseZ = index * -20 // Negative Z for depth
+      
+      wrapper.style.transform = `translate3d(${baseX}px, ${baseY}px, ${baseZ}px) rotateY(${index * 5}deg)`
+      
+      const img = document.createElement('img')
+      img.src = imageSrc
+      img.style.cssText = `
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+        transition: transform 0.3s ease;
+      `
+      
+      wrapper.appendChild(img)
+      container.appendChild(wrapper)
+      
+      // Enhanced 3D hover effects
+      wrapper.addEventListener('mouseenter', () => {
+        // Bring to front with 3D lift
+        wrapper.style.zIndex = '999'
+        gsap.to(wrapper, {
+          scale: 1.15,
+          z: 100,
+          rotationY: 0,
+          duration: 0.4,
+          ease: "power2.out"
+        })
+        
+        // Add subtle glow effect
+        wrapper.style.boxShadow = '0 30px 100px rgba(255, 255, 255, 0.2), 0 25px 80px rgba(0, 0, 0, 0.6)'
+      })
+      
+      wrapper.addEventListener('mouseleave', () => {
+        // Return to original position
+        gsap.to(wrapper, {
+          scale: 1,
+          z: baseZ,
+          rotationY: index * 5,
+          duration: 0.4,
+          ease: "power2.out"
+        })
+        
+        // Reset z-index and shadow
+        wrapper.style.zIndex = index + 1
+        wrapper.style.boxShadow = '0 25px 80px rgba(0, 0, 0, 0.6)'
+      })
+      
+      // Add click to bring to center
+      wrapper.addEventListener('click', (e) => {
+        e.stopPropagation()
+        
+        // Animate to center
+        gsap.to(wrapper, {
+          x: 225, // Center X
+          y: 175, // Center Y
+          z: 200,
+          scale: 1.3,
+          rotationY: 0,
+          duration: 0.6,
+          ease: "back.out(1.7)"
+        })
+        
+        // Return others to stack
+        container.querySelectorAll('.rodeo-image-wrapper').forEach((otherWrapper, otherIndex) => {
+          if (otherWrapper !== wrapper) {
+            const otherBaseX = 200 + (otherIndex * 40)
+            const otherBaseY = 150 + (otherIndex * 25)
+            const otherBaseZ = otherIndex * -20
+            
+            gsap.to(otherWrapper, {
+              x: otherBaseX,
+              y: otherBaseY,
+              z: otherBaseZ,
+              scale: 1,
+              rotationY: otherIndex * 5,
+              duration: 0.6,
+              ease: "power2.out"
+            })
+          }
+        })
+      })
+    })
+    
+    overlay.appendChild(container)
+    document.body.appendChild(overlay)
+    
+    // Animate entrance with 3D effect
+    gsap.set(container, { opacity: 0, scale: 0.8, rotationY: -30 })
+    gsap.to(container, {
+      opacity: 1,
+      scale: 1,
+      rotationY: 0,
+      duration: 0.8,
+      ease: "back.out(1.7)"
+    })
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        gsap.to(overlay, {
+          opacity: 0,
+          scale: 0.9,
+          rotationY: 30,
+          duration: 0.5,
+          ease: "power2.in",
+          onComplete: () => {
+            document.body.removeChild(overlay)
+          }
+        })
+      }
+    })
+    
+    // Close on escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        gsap.to(overlay, {
+          opacity: 0,
+          scale: 0.9,
+          rotationY: 30,
+          duration: 0.5,
+          ease: "power2.in",
+          onComplete: () => {
+            document.body.removeChild(overlay)
+            document.removeEventListener('keydown', handleEscape)
+          }
+        })
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+  }
+  
+  // Helper function to get current image source
+  const getCurrentImageSrc = (project) => {
+    if (project.mediaType === 'video') {
+      return project.poster
+    }
+    if (project.images && project.images.length > 0) {
+      return project.images[0] // Return first image for now
+    }
+    return project.image || project.poster
+  }
+  
   // Enhanced keyboard navigation for large hexagons
   const handleKeyDown = (event, clientWidth, clientHeight) => {
     const scale = Math.min(clientWidth / 1920, clientHeight / 1080, 1) * 1.2
@@ -675,6 +883,7 @@ export const useGallery = () => {
     // Animation functions
     animateItemHover,
     animateItemLeave,
+    expandImage,
     createScrollTriggerAnimations,
     createParallaxEffect,
     animatePageEnter,

@@ -18,22 +18,22 @@ export const useGallery = () => {
   const smoothScrollContainer = ref(null)
   const lenisInstance = ref(null)
   
-  // Ultra-fluid smooth scrolling configuration
+  // Optimized smooth scrolling configuration for performance
   const config = {
-    smoothness: 0.08,    // More fluid interpolation
-    trackpadMultiplier: 2.0, // Increased trackpad sensitivity
-    touchMultiplier: 2.5, // Increased touch sensitivity for mobile
-    maxVelocity: 150,    // Higher speed limit for smoother movement
+    smoothness: 0.15,    // Faster, more responsive interpolation
+    trackpadMultiplier: 1.2, // Reduced sensitivity for smoother control
+    touchMultiplier: 1.5, // Reduced touch sensitivity for better performance
+    maxVelocity: 80,    // Lower speed limit to reduce jerky movement
     directControl: true, // Enable direct speed control
     boundaries: {
-      minX: -30000,
-      maxX: 30000,
-      minY: -30000,
-      maxY: 30000
+      minX: -20000,
+      maxX: 20000,
+      minY: -20000,
+      maxY: 20000
     },
     mobile: {
-      smoothness: 0.12,    // More fluid for mobile
-      touchMultiplier: 3.0, // Increased touch sensitivity
+      smoothness: 0.18,    // Faster for mobile
+      touchMultiplier: 1.8, // Reduced touch sensitivity
     },
     lenis: {
       duration: 1.2,
@@ -77,30 +77,30 @@ export const useGallery = () => {
     scrollX.value += deltaX
     scrollY.value += deltaY
 
-    // Ultra-fluid boundary handling with smoother elasticity
+    // Optimized boundary handling with reduced computational load
     if (scrollX.value < config.boundaries.minX) {
       const overflow = config.boundaries.minX - scrollX.value
-      scrollX.value += overflow * 0.12
-      targetX += overflow * 0.06
+      scrollX.value += overflow * 0.08
+      targetX += overflow * 0.04
     }
     if (scrollX.value > config.boundaries.maxX) {
       const overflow = scrollX.value - config.boundaries.maxX
-      scrollX.value -= overflow * 0.12
-      targetX -= overflow * 0.06
+      scrollX.value -= overflow * 0.08
+      targetX -= overflow * 0.04
     }
     if (scrollY.value < config.boundaries.minY) {
       const overflow = config.boundaries.minY - scrollY.value
-      scrollY.value += overflow * 0.12
-      targetY += overflow * 0.06
+      scrollY.value += overflow * 0.08
+      targetY += overflow * 0.04
     }
     if (scrollY.value > config.boundaries.maxY) {
       const overflow = scrollY.value - config.boundaries.maxY
-      scrollY.value -= overflow * 0.12
-      targetY -= overflow * 0.06
+      scrollY.value -= overflow * 0.08
+      targetY -= overflow * 0.04
     }
 
-    // Always continue animation for ultra-fluid movement
-    if (Math.abs(deltaX) > 0.0005 || Math.abs(deltaY) > 0.0005) {
+    // Continue animation only if significant movement
+    if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
       animationFrame = requestAnimationFrame(updateSmoothScroll)
     }
   }
@@ -156,48 +156,28 @@ export const useGallery = () => {
   const handleWheel = (event) => {
     event.preventDefault()
     
-    // Allow both trackpad and mouse wheel for more fluid scrolling
+    // Simplified wheel handling for better performance
     const isTrackpad = Math.abs(event.deltaY) < 50 && Math.abs(event.deltaX) < 50
-    const isMouseWheel = !isTrackpad
-    
-    const currentTime = performance.now()
     const isMobile = window.innerWidth < 768
-    const sensitivity = isTrackpad ? config.trackpadMultiplier : config.trackpadMultiplier * 0.8
-    const adjustedSensitivity = sensitivity * (isMobile ? 1.2 : 1.0)
+    const sensitivity = isTrackpad ? config.trackpadMultiplier : config.trackpadMultiplier * 0.6
+    const adjustedSensitivity = sensitivity * (isMobile ? 1.0 : 1.0)
     
-    // Calculate smooth speed based on delta magnitude and time
-    const timeDelta = currentTime - lastTrackpadTime
-    
-    if (timeDelta > 0) {
-      // Smooth speed calculation - higher delta = faster movement
-      const speedX = Math.abs(event.deltaX) / (timeDelta + 1)
-      const speedY = Math.abs(event.deltaY) / (timeDelta + 1)
-      
-      // Update current speed with smoothing
-      currentTrackpadSpeed.x = currentTrackpadSpeed.x * 0.8 + speedX * 0.2
-      currentTrackpadSpeed.y = currentTrackpadSpeed.y * 0.8 + speedY * 0.2
-      
-      // Calculate speed multiplier based on movement velocity
-      const speedMultiplier = Math.min((currentTrackpadSpeed.x + currentTrackpadSpeed.y) / 2, 1.5)
-      
-      // Apply smooth movement with speed-based multiplier
-      const deltaX = event.deltaX * adjustedSensitivity * (1 + speedMultiplier * 0.2)
-      const deltaY = event.deltaY * adjustedSensitivity * (1 + speedMultiplier * 0.2)
+    // Direct movement without complex calculations
+    const deltaX = event.deltaX * adjustedSensitivity
+    const deltaY = event.deltaY * adjustedSensitivity
 
-      // Smooth movement
-      targetX -= deltaX
-      targetY -= deltaY
+    // Apply movement with velocity limiting
+    const maxDelta = config.maxVelocity
+    targetX -= Math.max(-maxDelta, Math.min(maxDelta, deltaX))
+    targetY -= Math.max(-maxDelta, Math.min(maxDelta, deltaY))
 
-      startSmoothScroll()
-    }
+    startSmoothScroll()
     
-    lastTrackpadTime = currentTime
-    
-    // Apply minimal smooth inertia
+    // Minimal inertia
     clearTimeout(inertiaTimeout)
     inertiaTimeout = setTimeout(() => {
       applyTrackpadInertia()
-    }, 80)
+    }, 100)
   }
 
   // Minimal smooth inertia for natural feel
@@ -321,41 +301,21 @@ export const useGallery = () => {
   const handleTouchMove = (event) => {
     event.preventDefault()
     if (event.touches.length === 1) {
-      const currentTime = performance.now()
       const deltaX = event.touches[0].clientX - lastTouchX
       const deltaY = event.touches[0].clientY - lastTouchY
       
-      // Calculate smooth touch speed
-      const timeDelta = currentTime - lastTouchTime
+      // Simplified touch movement for better performance
+      const touchMultiplier = config.touchMultiplier
+      const maxDelta = config.maxVelocity
       
-      if (timeDelta > 0 && lastTouchTime > 0) {
-        // Smooth speed calculation based on movement
-        const speedX = Math.abs(deltaX) / (timeDelta + 1)
-        const speedY = Math.abs(deltaY) / (timeDelta + 1)
-        
-        // Update current speed with smoothing
-        currentTouchSpeed.x = currentTouchSpeed.x * 0.8 + speedX * 0.2
-        currentTouchSpeed.y = currentTouchSpeed.y * 0.8 + speedY * 0.2
-        
-        // Calculate speed multiplier based on touch velocity
-        const speedMultiplier = Math.min((currentTouchSpeed.x + currentTouchSpeed.y) / 2, 1.8) // Cap at 1.8x for touch
-        
-        // Apply smooth movement with speed-based multiplier
-        const touchMultiplier = config.touchMultiplier * (1 + speedMultiplier * 0.2)
-        
-        targetX += deltaX * touchMultiplier
-        targetY += deltaY * touchMultiplier
-        
-        startSmoothScroll()
-      }
+      targetX += Math.max(-maxDelta, Math.min(maxDelta, deltaX * touchMultiplier))
+      targetY += Math.max(-maxDelta, Math.min(maxDelta, deltaY * touchMultiplier))
       
-      // Update for drag compatibility
-      velocity.value.x = deltaX * 0.6
-      velocity.value.y = deltaY * 0.6
+      startSmoothScroll()
       
+      // Update position
       lastTouchX = event.touches[0].clientX
       lastTouchY = event.touches[0].clientY
-      lastTouchTime = currentTime
     }
   }
 

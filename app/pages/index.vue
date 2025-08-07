@@ -1305,8 +1305,8 @@ const gridProjects = computed(() => {
   const horizontalSpacing = itemWidth * 0.75
   const verticalSpacing = itemWidth * 0.866
   
-  // Create infinite grid coverage that fills all visible areas with no empty spaces
-  const gridRange = 30  // Large range to ensure complete coverage with no dark empty areas
+  // Create optimized grid coverage for better performance
+  const gridRange = 20  // Reduced range for better performance while maintaining coverage
   const startX = -gridRange
   const endX = gridRange
   const startY = -gridRange
@@ -1459,14 +1459,11 @@ onBeforeUnmount(() => {
   backface-visibility: hidden;
   /* Perfect hexagon aspect ratio for large cells */
   aspect-ratio: 1.154;
-  /* Enhanced properties for GSAP animations */
-  will-change: transform, opacity;
-  perspective: 1000px;
-  /* Enhanced hexagonal border with gradient and glow */
-  border: 2px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 
-    0 0 20px rgba(255, 255, 255, 0.02),
-    inset 0 0 20px rgba(255, 255, 255, 0.02);
+  /* Optimized properties for better performance */
+  will-change: transform;
+  /* Simplified border for better performance */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.01);
   /* Enhanced transitions for premium UX */
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer !important;

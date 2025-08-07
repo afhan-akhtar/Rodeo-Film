@@ -30,7 +30,7 @@
       </div>
     </nav>
 
-    <!-- Grid Project Showcase -->
+    <!-- Full Screen Honeycomb Showcase -->
     <div 
       class="showcase-container"
       @wheel="gallery.handleWheel" 
@@ -61,7 +61,7 @@
           @click="handleProjectClick($event, project)"
         >
           <!-- Background Image/Video -->
-          <div class="relative w-full h-full overflow-hidden group hexagon-content">
+          <div class="relative w-full h-full overflow-hidden group grid-content">
             <!-- Conditional rendering for video or image -->
             <video
               v-if="project.mediaType === 'video'"
@@ -891,22 +891,22 @@ const handlePlaylistLeave = () => {
 const clientWidth = ref(1920)
 const clientHeight = ref(1080)
 
-// Position each grid item in proper hexagonal honeycomb pattern
+// Position each grid item in large hexagonal honeycomb pattern across full screen
 const getGridPosition = (gridX, gridY) => {
-  // Responsive sizing based on viewport
-  const baseWidth = 400
+  // Large hexagon cells for impressive visual impact
+  const baseWidth = 350  // Large cells for better visual impact
   const baseHeight = Math.round(baseWidth / 1.154) // Perfect hexagon height ratio
   
-  // Scale items based on viewport size
-  const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
+  // Responsive scaling based on viewport
+  const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
   const itemWidth = baseWidth * scale
   const itemHeight = baseHeight * scale
   
-  // Perfect hexagonal tessellation calculations
+  // Perfect hexagonal tessellation calculations for large honeycomb
   // For a regular hexagon with width W, the horizontal spacing is W * 3/4
   // and the vertical spacing is W * sqrt(3)/2 ≈ W * 0.866
   const horizontalSpacing = itemWidth * 0.75
-  const verticalSpacing = itemWidth * 0.866 // Using width for perfect hexagon ratio
+  const verticalSpacing = itemWidth * 0.866
   
   // Hexagonal positioning: offset every other row by half horizontal spacing
   const isOddRow = gridY % 2 === 1
@@ -1174,19 +1174,19 @@ const playlists = [
   }
 ]
 
-// Create infinite grid of small project showcases with dynamic viewport-based generation
+// Create large hexagonal honeycomb grid across full screen
 const gridProjects = computed(() => {
   const grid = []
   
-  // Calculate viewport bounds in grid coordinates using proper hexagon math
-  const scale = Math.min(clientWidth.value / 1920, 1) * 1.2
-  const itemWidth = 280 * scale
-  const itemHeight = 240 * scale
+  // Calculate viewport bounds for large hexagon grid
+  const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
+  const itemWidth = 350 * scale
+  const itemHeight = Math.round(itemWidth / 1.154)
   const horizontalSpacing = itemWidth * 0.75
-  const verticalSpacing = itemWidth * 0.866 // Perfect hexagon ratio
+  const verticalSpacing = itemWidth * 0.866
   
-  // Calculate visible range with extra buffer for smooth scrolling
-  const bufferMultiplier = 3
+  // Calculate visible range with buffer for smooth infinite scrolling
+  const bufferMultiplier = 2
   const visibleColumns = Math.ceil(clientWidth.value / horizontalSpacing) * bufferMultiplier
   const visibleRows = Math.ceil(clientHeight.value / verticalSpacing) * bufferMultiplier
   
@@ -1194,7 +1194,7 @@ const gridProjects = computed(() => {
   const gridOffsetX = Math.floor(-scrollX.value / horizontalSpacing) - Math.floor(visibleColumns / 2)
   const gridOffsetY = Math.floor(-scrollY.value / verticalSpacing) - Math.floor(visibleRows / 2)
   
-  // Generate grid items in visible area plus buffer - only show actual projects
+  // Generate large hexagon grid items in visible area plus buffer
   for (let x = gridOffsetX; x < gridOffsetX + visibleColumns; x++) {
     for (let y = gridOffsetY; y < gridOffsetY + visibleRows; y++) {
       // Use modulo to cycle through projects infinitely
@@ -1285,6 +1285,7 @@ onBeforeUnmount(() => {
   width: 100vw;
   overflow: hidden;
   position: relative;
+  background: #000;
 }
 
 .showcase-wrapper {
@@ -1299,8 +1300,8 @@ onBeforeUnmount(() => {
   display: block;
   background: transparent;
   overflow: hidden;
-  /* Perfect hexagon shape using CSS clip-path */
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  /* Large hexagon shape for impressive visual impact */
+  clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
   /* Ensure no margin or border that could create gaps */
   margin: 0;
   border: none;
@@ -1308,26 +1309,34 @@ onBeforeUnmount(() => {
   transform: translate3d(0, 0, 0);
   transform-style: preserve-3d;
   backface-visibility: hidden;
-  /* Ensure proper aspect ratio for hexagon */
+  /* Perfect hexagon aspect ratio for large cells */
   aspect-ratio: 1.154;
   /* Enhanced properties for GSAP animations */
   will-change: transform, opacity;
   perspective: 1000px;
+  /* Subtle border to define each large hexagon cell */
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  /* Smooth transitions for interactions */
+  transition: all 0.3s ease;
 }
 
 /* GSAP handles all hover animations - no CSS hover needed */
 
-.hexagon-content {
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+.grid-content {
+  clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
 }
 
-.hexagon-content video,
-.hexagon-content img {
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+.grid-content video,
+.grid-content img {
+  clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
 }
 
-/* Mobile responsive adjustments */
+/* Mobile responsive adjustments for large hexagons */
 @media (max-width: 768px) {
+  .project-grid-item {
+    border-width: 1.5px;
+  }
+  
   .project-grid-item h3 {
     font-size: 0.875rem;
   }
@@ -1338,6 +1347,10 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 480px) {
+  .project-grid-item {
+    border-width: 1px;
+  }
+  
   .project-grid-item h3 {
     font-size: 0.75rem;
   }

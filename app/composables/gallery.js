@@ -18,17 +18,17 @@ export const useGallery = () => {
   const smoothScrollContainer = ref(null)
   const lenisInstance = ref(null)
   
-  // Configuration
+  // Enhanced configuration for large hexagon smooth scrolling
   const config = {
-    smoothness: 0.1,
-    damping: 0.8,
-    maxVelocity: 50,
-    inertiaDelay: 100,
+    smoothness: 0.08,  // Smoother for large elements
+    damping: 0.85,
+    maxVelocity: 80,   // Higher velocity for better responsiveness
+    inertiaDelay: 50,  // Faster response
     boundaries: {
-      minX: -5000,
-      maxX: 5000,
-      minY: -5000,
-      maxY: 5000
+      minX: -8000,     // Larger boundaries for infinite scrolling
+      maxX: 8000,
+      minY: -8000,
+      maxY: 8000
     },
     lenis: {
       duration: 1.2,
@@ -155,28 +155,26 @@ export const useGallery = () => {
     }
   }
 
-  // Enhanced wheel scrolling with Lenis and momentum
+  // Enhanced wheel scrolling for large hexagon navigation
   const handleWheel = (event) => {
-    // For vertical scrolling, let Lenis handle it
-    if (!event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-      // Lenis will handle this automatically
-      return
-    }
-
-    // Prevent default for horizontal scrolling or when shift is held
     event.preventDefault()
     
-    const sensitivity = 1.2
+    // Enhanced sensitivity for large hexagon scrolling
+    const sensitivity = 2.5
     let deltaX = event.deltaX * sensitivity
     let deltaY = event.deltaY * sensitivity
 
-    // Allow horizontal scrolling with shift key
+    // Allow smooth omnidirectional scrolling
     if (event.shiftKey) {
+      // Horizontal scrolling with shift
       deltaX += event.deltaY * sensitivity
       deltaY = 0
+    } else if (Math.abs(event.deltaX) < Math.abs(event.deltaY)) {
+      // Convert vertical scrolling to smooth diagonal movement
+      deltaX += event.deltaY * 0.3
     }
 
-    // Apply momentum for horizontal movement
+    // Apply smooth momentum
     targetX -= deltaX
     targetY -= deltaY
 
@@ -188,11 +186,11 @@ export const useGallery = () => {
 
     startSmoothScroll()
 
-    // Apply slight inertia after wheel stops
+    // Enhanced inertia for smooth large hexagon navigation
     clearTimeout(inertiaTimeout)
     inertiaTimeout = setTimeout(() => {
-      velocity.value.x = -deltaX * 0.1
-      velocity.value.y = -deltaY * 0.1
+      velocity.value.x = -deltaX * 0.15
+      velocity.value.y = -deltaY * 0.15
       applyInertia()
     }, config.inertiaDelay)
   }
@@ -219,12 +217,13 @@ export const useGallery = () => {
       const deltaX = event.clientX - lastMouseX
       const deltaY = event.clientY - lastMouseY
       
-      targetX += deltaX * 2
-      targetY += deltaY * 2
+      // Enhanced sensitivity for large hexagon dragging
+      targetX += deltaX * 3
+      targetY += deltaY * 3
       
       // Update velocity for smooth inertia
-      velocity.value.x = deltaX * 0.5
-      velocity.value.y = deltaY * 0.5
+      velocity.value.x = deltaX * 0.8
+      velocity.value.y = deltaY * 0.8
       
       lastMouseX = event.clientX
       lastMouseY = event.clientY
@@ -280,10 +279,10 @@ export const useGallery = () => {
     applyInertia()
   }
 
-  // Keyboard navigation with smooth animations
+  // Enhanced keyboard navigation for large hexagons
   const handleKeyDown = (event, clientWidth, clientHeight) => {
-    const scale = Math.min(clientWidth / 1920, 1) * 1.2
-    const baseWidth = 280
+    const scale = Math.min(clientWidth / 1920, clientHeight / 1080, 1) * 1.2
+    const baseWidth = 350  // Large hexagon size
     const itemWidth = baseWidth * scale
     
     const horizontalSpeed = itemWidth * 0.75
@@ -350,7 +349,7 @@ export const useGallery = () => {
     })
     
     // Animate content inside
-    const content = element.querySelector('.hexagon-content')
+    const content = element.querySelector('.grid-content')
     if (content) {
       tl.to(content, {
         scale: 1.1,
@@ -377,7 +376,7 @@ export const useGallery = () => {
       ease: "power2.out"
     })
     
-    const content = element.querySelector('.hexagon-content')
+    const content = element.querySelector('.grid-content')
     if (content) {
       tl.to(content, {
         scale: 1,
@@ -490,10 +489,10 @@ export const useGallery = () => {
   const animatePageEnter = () => {
     const tl = gsap.timeline()
     
-    // Immediate showcase container reveal from top
+    // Immediate full-screen showcase reveal from top
     tl.fromTo('.showcase-container', 
-      { opacity: 0, y: -100 },
-      { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
+      { opacity: 0, y: -50 },
+      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
     )
     // Staggered reveal of items from top to bottom
     .fromTo('.project-grid-item',

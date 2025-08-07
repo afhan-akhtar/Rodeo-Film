@@ -62,9 +62,9 @@
         >
           <!-- Background Image/Video -->
           <div class="relative w-full h-full overflow-hidden group grid-content">
-            <!-- Conditional rendering for video or image -->
+            <!-- Conditional rendering for video or image with lazy loading -->
             <video
-              v-if="project.mediaType === 'video'"
+              v-if="project.mediaType === 'video' && isVideoInViewport(project)"
               :poster="project.poster"
               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               muted
@@ -76,6 +76,13 @@
               <!-- Fallback to poster image if video fails -->
               <img :src="project.poster" :alt="project.showcase_title" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
             </video>
+            <!-- Show poster image for videos not in viewport -->
+            <img
+              v-else-if="project.mediaType === 'video'"
+              :src="project.poster"
+              :alt="project.showcase_title"
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
             <img
               v-else
               :src="getCurrentImageSrc(project)"
@@ -573,12 +580,13 @@ const currentHoveredAbout = ref(null)
 // Video debounce utility to prevent conflicts
 const videoDebounceTimers = new Map()
 
-// Loading completion handler - immediate showcase reveal
+// Loading completion handler - immediate showcase display
 const onLoadingComplete = () => {
   showLoading.value = false
-  // Immediately trigger entrance animations with no delay
+  // No animations - immediate display of all content
   nextTick(() => {
-    gallery.animatePageEnter()
+    // Ensure all content is immediately visible
+    gallery.animatePageEnter() // This now just sets opacity to 1 immediately
   })
 }
 
@@ -891,6 +899,35 @@ const handlePlaylistLeave = () => {
 const clientWidth = ref(1920)
 const clientHeight = ref(1080)
 
+// Function to check if video should be loaded (within viewport + buffer)
+const isVideoInViewport = (project) => {
+  const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
+  const itemWidth = 350 * scale
+  const horizontalSpacing = itemWidth * 0.75
+  const verticalSpacing = itemWidth * 0.866
+  
+  // Calculate project position
+  const isOddRow = project.gridY % 2 === 1
+  const offsetX = isOddRow ? horizontalSpacing * 0.5 : 0
+  const projectX = project.gridX * horizontalSpacing + offsetX + scrollX.value
+  const projectY = project.gridY * verticalSpacing + scrollY.value
+  
+  // Define viewport bounds with large buffer to ensure no empty areas
+  const buffer = itemWidth * 4  // Large buffer to load videos well before they're needed
+  const viewportLeft = -buffer
+  const viewportRight = clientWidth.value + buffer
+  const viewportTop = -buffer
+  const viewportBottom = clientHeight.value + buffer
+  
+  // Check if project is within extended viewport
+  return (
+    projectX + itemWidth > viewportLeft &&
+    projectX < viewportRight &&
+    projectY + itemWidth > viewportTop &&
+    projectY < viewportBottom
+  )
+}
+
 // Position each grid item in large hexagonal honeycomb pattern across full screen
 const getGridPosition = (gridX, gridY) => {
   // Large hexagon cells for impressive visual impact
@@ -955,9 +992,13 @@ const projects = [
     client: 'Canal+',
     category: 'Series',
     director: 'Gabriel Dugué',
-    mediaType: 'video',
-    video: 'https://rodeo.film/media/site/3ed14dabac-1717424859/wheels.mp4',
-    poster: 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90'
+    mediaType: 'image',
+    image: 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90'
+    ]
   },
   {
     id: 4,
@@ -980,9 +1021,13 @@ const projects = [
     client: 'Apple',
     category: 'Product Film',
     director: 'Claire Martin',
-    mediaType: 'video',
-    video: 'https://rodeo.film/media/site/9640d12f12-1718114663/boucle3.mp4',
-    poster: 'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90'
+    mediaType: 'image',
+    image: 'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90'
+    ]
   },
   {
     id: 6,
@@ -1005,9 +1050,13 @@ const projects = [
     client: 'Adidas',
     category: 'Sports Film',
     director: 'Sofia Chen',
-    mediaType: 'video',
-    video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    poster: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90'
+    mediaType: 'image',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&h=1080&fit=crop&q=90'
+    ]
   },
   {
     id: 8,
@@ -1024,9 +1073,66 @@ const projects = [
       'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90'
     ]
   },
-  // Award videos in the grid
+  // More image projects for infinite coverage
   {
     id: 9,
+    showcase_title: 'URBAN',
+    client: 'Nike Campaign',
+    category: 'Photography',
+    director: 'Alex Chen',
+    mediaType: 'image',
+    image: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1512374382149-233c42b6a83b?w=1920&h=1080&fit=crop&q=90'
+    ]
+  },
+  {
+    id: 10,
+    showcase_title: 'MOTION',
+    client: 'Adidas Sport',
+    category: 'Visual',
+    director: 'Sofia Martinez',
+    mediaType: 'image',
+    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=1920&h=1080&fit=crop&q=90'
+    ]
+  },
+  {
+    id: 11,
+    showcase_title: 'TECH',
+    client: 'Apple Innovation',
+    category: 'Product',
+    director: 'David Park',
+    mediaType: 'image',
+    image: 'https://images.unsplash.com/photo-1512374382149-233c42b6a83b?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1512374382149-233c42b6a83b?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1920&h=1080&fit=crop&q=90'
+    ]
+  },
+  {
+    id: 12,
+    showcase_title: 'FUTURE',
+    client: 'Tesla Motors',
+    category: 'Automotive',
+    director: 'Emma Wilson',
+    mediaType: 'image',
+    image: 'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=1920&h=1080&fit=crop&q=90',
+    images: [
+      'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1512374382149-233c42b6a83b?w=1920&h=1080&fit=crop&q=90',
+      'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1920&h=1080&fit=crop&q=90'
+    ]
+  },
+  // Award videos in the grid - keep limited number
+  {
+    id: 13,
     showcase_title: 'BENOIT',
     client: 'Cannes Lions Gold',
     category: 'Film Craft',
@@ -1037,18 +1143,7 @@ const projects = [
     isAward: true
   },
   {
-    id: 10,
-    showcase_title: 'BOUCAN',
-    client: 'D&AD Pencil',
-    category: 'Direction',
-    director: '2024',
-    mediaType: 'video',
-    video: 'https://rodeo.film/media/site/1752ed6232-1717423146/boucan_1.mp4',
-    poster: 'https://rodeo.film/media/site/8061eff27c-1670345386/affiche_boucan_-copie.jpg',
-    isAward: true
-  },
-  {
-    id: 11,
+    id: 14,
     showcase_title: 'SWEET',
     client: 'AICP Awards',
     category: 'Commercial',
@@ -1174,7 +1269,7 @@ const playlists = [
   }
 ]
 
-// Create large hexagonal honeycomb grid across full screen
+// Create persistent large hexagonal honeycomb grid that doesn't hide on scroll
 const gridProjects = computed(() => {
   const grid = []
   
@@ -1185,18 +1280,16 @@ const gridProjects = computed(() => {
   const horizontalSpacing = itemWidth * 0.75
   const verticalSpacing = itemWidth * 0.866
   
-  // Calculate visible range with buffer for smooth infinite scrolling
-  const bufferMultiplier = 2
-  const visibleColumns = Math.ceil(clientWidth.value / horizontalSpacing) * bufferMultiplier
-  const visibleRows = Math.ceil(clientHeight.value / verticalSpacing) * bufferMultiplier
+  // Create infinite grid coverage that fills all visible areas with no empty spaces
+  const gridRange = 30  // Large range to ensure complete coverage with no dark empty areas
+  const startX = -gridRange
+  const endX = gridRange
+  const startY = -gridRange
+  const endY = gridRange
   
-  // Calculate grid offset based on current scroll position
-  const gridOffsetX = Math.floor(-scrollX.value / horizontalSpacing) - Math.floor(visibleColumns / 2)
-  const gridOffsetY = Math.floor(-scrollY.value / verticalSpacing) - Math.floor(visibleRows / 2)
-  
-  // Generate large hexagon grid items in visible area plus buffer
-  for (let x = gridOffsetX; x < gridOffsetX + visibleColumns; x++) {
-    for (let y = gridOffsetY; y < gridOffsetY + visibleRows; y++) {
+  // Generate persistent hexagon grid items across large area
+  for (let x = startX; x < endX; x++) {
+    for (let y = startY; y < endY; y++) {
       // Use modulo to cycle through projects infinitely
       const projectIndex = ((Math.abs(x) + Math.abs(y)) % projects.length)
       const project = projects[projectIndex]
@@ -1286,6 +1379,8 @@ onBeforeUnmount(() => {
   overflow: hidden;
   position: relative;
   background: #000;
+  /* Ensure immediate visibility */
+  opacity: 1;
 }
 
 .showcase-wrapper {
@@ -1316,8 +1411,10 @@ onBeforeUnmount(() => {
   perspective: 1000px;
   /* Subtle border to define each large hexagon cell */
   border: 2px solid rgba(255, 255, 255, 0.15);
-  /* Smooth transitions for interactions */
-  transition: all 0.3s ease;
+  /* Immediate visibility - no animations */
+  opacity: 1;
+  /* Smooth transitions for interactions only */
+  transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
 /* GSAP handles all hover animations - no CSS hover needed */
@@ -1472,17 +1569,17 @@ onBeforeUnmount(() => {
   will-change: transform;
 }
 
-/* GSAP animation classes */
+/* GSAP animation classes - disabled for immediate display */
 .gsap-fade-in {
-  opacity: 0;
+  opacity: 1; /* Always visible */
 }
 
 .gsap-scale-up {
-  transform: scale(0.8);
+  transform: scale(1); /* No scaling */
 }
 
 .gsap-slide-up {
-  transform: translateY(50px);
+  transform: translateY(0); /* No sliding */
 }
 
 /* Hide scrollbars */

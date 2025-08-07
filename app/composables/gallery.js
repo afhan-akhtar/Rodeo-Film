@@ -18,17 +18,18 @@ export const useGallery = () => {
   const smoothScrollContainer = ref(null)
   const lenisInstance = ref(null)
   
-  // Enhanced configuration for large hexagon smooth scrolling
+  // Rodeo Film style ultra-smooth scrolling configuration
   const config = {
-    smoothness: 0.08,  // Smoother for large elements
-    damping: 0.85,
-    maxVelocity: 80,   // Higher velocity for better responsiveness
-    inertiaDelay: 50,  // Faster response
+    smoothness: 0.045,  // Ultra-smooth like Rodeo Film
+    damping: 0.92,      // High damping for refined motion
+    maxVelocity: 120,   // Higher velocity for responsive feel
+    inertiaDelay: 30,   // Immediate response
+    mouseMultiplier: 0.8, // Mouse sensitivity multiplier
     boundaries: {
-      minX: -8000,     // Larger boundaries for infinite scrolling
-      maxX: 8000,
-      minY: -8000,
-      maxY: 8000
+      minX: -25000,    // Infinite-feeling boundaries
+      maxX: 25000,
+      minY: -25000,
+      maxY: 25000
     },
     lenis: {
       duration: 1.2,
@@ -59,43 +60,39 @@ export const useGallery = () => {
   let inertiaTimeout = null
   let gsapTween = null
 
-  // Smooth scrolling animation loop
+  // Rodeo Film style ultra-smooth scrolling animation loop
   const updateSmoothScroll = () => {
-    // Apply smooth interpolation
+    // Ultra-smooth interpolation with Rodeo Film precision
     const deltaX = (targetX - scrollX.value) * config.smoothness
     const deltaY = (targetY - scrollY.value) * config.smoothness
 
     scrollX.value += deltaX
     scrollY.value += deltaY
 
-    // Update velocity for inertia
-    velocity.value.x = deltaX
-    velocity.value.y = deltaY
-
-    // Apply boundaries with elastic effect
+    // Apply boundaries with elastic effect (softer than before)
     if (scrollX.value < config.boundaries.minX) {
       const overflow = config.boundaries.minX - scrollX.value
-      scrollX.value += overflow * 0.1
-      targetX += overflow * 0.1
+      scrollX.value += overflow * 0.05
+      targetX += overflow * 0.05
     }
     if (scrollX.value > config.boundaries.maxX) {
       const overflow = scrollX.value - config.boundaries.maxX
-      scrollX.value -= overflow * 0.1
-      targetX -= overflow * 0.1
+      scrollX.value -= overflow * 0.05
+      targetX -= overflow * 0.05
     }
     if (scrollY.value < config.boundaries.minY) {
       const overflow = config.boundaries.minY - scrollY.value
-      scrollY.value += overflow * 0.1
-      targetY += overflow * 0.1
+      scrollY.value += overflow * 0.05
+      targetY += overflow * 0.05
     }
     if (scrollY.value > config.boundaries.maxY) {
       const overflow = scrollY.value - config.boundaries.maxY
-      scrollY.value -= overflow * 0.1
-      targetY -= overflow * 0.1
+      scrollY.value -= overflow * 0.05
+      targetY -= overflow * 0.05
     }
 
-    // Continue animation if still moving
-    if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1 || isInertiaActive.value) {
+    // Continue animation with higher precision threshold
+    if (Math.abs(deltaX) > 0.05 || Math.abs(deltaY) > 0.05 || isInertiaActive.value) {
       animationFrame = requestAnimationFrame(updateSmoothScroll)
     }
   }
@@ -132,53 +129,42 @@ export const useGallery = () => {
     animationFrame = requestAnimationFrame(updateSmoothScroll)
   }
 
-  // Apply inertia when dragging stops
-  const applyInertia = () => {
-    if (Math.abs(velocity.value.x) > 1 || Math.abs(velocity.value.y) > 1) {
-      isInertiaActive.value = true
-      
-      // Use GSAP for smooth inertia animation
-      gsapTween = gsap.to(velocity.value, {
-        x: 0,
-        y: 0,
-        duration: 2,
-        ease: "power3.out",
-        onUpdate: () => {
-          targetX += velocity.value.x * 10
-          targetY += velocity.value.y * 10
-        },
-        onComplete: () => {
-          isInertiaActive.value = false
-          gsapTween = null
-        }
-      })
-    }
-  }
 
-  // Enhanced wheel scrolling for large hexagon navigation
+
+  // Rodeo Film style ultra-smooth wheel scrolling with physics-based momentum
   const handleWheel = (event) => {
     event.preventDefault()
     
-    // Enhanced sensitivity for large hexagon scrolling
-    const sensitivity = 2.5
+    // Rodeo Film style sensitivity with refined control
+    const sensitivity = config.mouseMultiplier * 1.8
     let deltaX = event.deltaX * sensitivity
     let deltaY = event.deltaY * sensitivity
 
-    // Allow smooth omnidirectional scrolling
+    // Smooth omnidirectional scrolling with natural physics
     if (event.shiftKey) {
-      // Horizontal scrolling with shift
+      // Pure horizontal scrolling
       deltaX += event.deltaY * sensitivity
       deltaY = 0
-    } else if (Math.abs(event.deltaX) < Math.abs(event.deltaY)) {
-      // Convert vertical scrolling to smooth diagonal movement
-      deltaX += event.deltaY * 0.3
+    } else {
+      // Natural diagonal movement for engaging exploration
+      if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+        deltaX += event.deltaY * 0.25 // Subtle diagonal bias
+      }
     }
 
-    // Apply smooth momentum
-    targetX -= deltaX
-    targetY -= deltaY
+    // Apply Rodeo Film style smooth momentum with physics
+    const currentVelX = velocity.value.x
+    const currentVelY = velocity.value.y
+    
+    // Add acceleration instead of direct position change
+    velocity.value.x = currentVelX * 0.85 + (-deltaX * 0.12)
+    velocity.value.y = currentVelY * 0.85 + (-deltaY * 0.12)
+    
+    // Update target positions with momentum
+    targetX += velocity.value.x * 8
+    targetY += velocity.value.y * 8
 
-    // Clear any existing inertia
+    // Clear any existing inertia animations
     if (gsapTween) {
       gsapTween.kill()
       isInertiaActive.value = false
@@ -186,13 +172,35 @@ export const useGallery = () => {
 
     startSmoothScroll()
 
-    // Enhanced inertia for smooth large hexagon navigation
+    // Rodeo Film style continuous momentum decay
     clearTimeout(inertiaTimeout)
     inertiaTimeout = setTimeout(() => {
-      velocity.value.x = -deltaX * 0.15
-      velocity.value.y = -deltaY * 0.15
-      applyInertia()
+      applyPhysicsBasedInertia()
     }, config.inertiaDelay)
+  }
+
+  // Physics-based inertia similar to Rodeo Film
+  const applyPhysicsBasedInertia = () => {
+    const velMagnitude = Math.sqrt(velocity.value.x ** 2 + velocity.value.y ** 2)
+    
+    if (velMagnitude > 0.5) {
+      isInertiaActive.value = true
+      
+      gsapTween = gsap.to(velocity.value, {
+        x: 0,
+        y: 0,
+        duration: 2.5,
+        ease: "power3.out",
+        onUpdate: () => {
+          targetX += velocity.value.x * 6
+          targetY += velocity.value.y * 6
+        },
+        onComplete: () => {
+          isInertiaActive.value = false
+          gsapTween = null
+        }
+      })
+    }
   }
 
   // Mouse drag controls with enhanced momentum
@@ -217,13 +225,14 @@ export const useGallery = () => {
       const deltaX = event.clientX - lastMouseX
       const deltaY = event.clientY - lastMouseY
       
-      // Enhanced sensitivity for large hexagon dragging
-      targetX += deltaX * 3
-      targetY += deltaY * 3
+      // Rodeo Film style refined drag sensitivity
+      const dragMultiplier = config.mouseMultiplier * 4
+      targetX += deltaX * dragMultiplier
+      targetY += deltaY * dragMultiplier
       
-      // Update velocity for smooth inertia
-      velocity.value.x = deltaX * 0.8
-      velocity.value.y = deltaY * 0.8
+      // Smooth velocity update for natural momentum
+      velocity.value.x = deltaX * 1.2
+      velocity.value.y = deltaY * 1.2
       
       lastMouseX = event.clientX
       lastMouseY = event.clientY
@@ -235,8 +244,8 @@ export const useGallery = () => {
   const handleMouseUp = () => {
     if (isDragging.value) {
       isDragging.value = false
-      // Apply inertia after mouse release
-      applyInertia()
+      // Apply Rodeo Film style physics-based inertia
+      applyPhysicsBasedInertia()
     }
   }
 
@@ -260,12 +269,14 @@ export const useGallery = () => {
       const deltaX = event.touches[0].clientX - lastTouchX
       const deltaY = event.touches[0].clientY - lastTouchY
       
-      targetX += deltaX * 2
-      targetY += deltaY * 2
+      // Rodeo Film style touch sensitivity
+      const touchMultiplier = config.mouseMultiplier * 3
+      targetX += deltaX * touchMultiplier
+      targetY += deltaY * touchMultiplier
       
-      // Update velocity for smooth inertia
-      velocity.value.x = deltaX * 0.5
-      velocity.value.y = deltaY * 0.5
+      // Update velocity for physics-based momentum
+      velocity.value.x = deltaX * 0.8
+      velocity.value.y = deltaY * 0.8
       
       lastTouchX = event.touches[0].clientX
       lastTouchY = event.touches[0].clientY
@@ -275,8 +286,8 @@ export const useGallery = () => {
   }
 
   const handleTouchEnd = () => {
-    // Apply inertia after touch release
-    applyInertia()
+    // Apply Rodeo Film style inertia after touch release
+    applyPhysicsBasedInertia()
   }
 
   // Enhanced keyboard navigation for large hexagons
@@ -409,11 +420,11 @@ export const useGallery = () => {
     }
   }
 
-  // Create scroll-triggered animations for grid items with Lenis integration
+  // No scroll-triggered animations - immediate display
   const createScrollTriggerAnimations = () => {
     if (!process.client) return
     
-    // Configure ScrollTrigger to work with Lenis
+    // Configure ScrollTrigger to work with Lenis (keep for other functionality)
     ScrollTrigger.scrollerProxy(document.body, {
       scrollTop(value) {
         if (arguments.length) {
@@ -437,32 +448,12 @@ export const useGallery = () => {
       }
     })
     
-    // Animate items as they come into view
-    gsap.utils.toArray('.project-grid-item').forEach((item, index) => {
-      gsap.fromTo(item, 
-        {
-          opacity: 0,
-          scale: 0.8,
-          rotationY: -15,
-          y: 50
-        },
-        {
-          opacity: 1,
-          scale: 1,
-          rotationY: 0,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-          delay: index * 0.05,
-          scrollTrigger: {
-            trigger: item,
-            start: "top 85%",
-            end: "bottom 15%",
-            toggleActions: "play none none reverse",
-            scroller: document.body
-          }
-        }
-      )
+    // Ensure all items are immediately visible without animations
+    gsap.set('.project-grid-item', {
+      opacity: 1,
+      scale: 1,
+      rotationY: 0,
+      y: 0
     })
     
     // Refresh ScrollTrigger after setup
@@ -485,33 +476,14 @@ export const useGallery = () => {
     })
   }
 
-  // Page transition animations - immediate top-to-bottom reveal
+  // No page entrance animations - immediate display
   const animatePageEnter = () => {
-    const tl = gsap.timeline()
+    // Immediately show all content without animations
+    gsap.set('.showcase-container', { opacity: 1, y: 0 })
+    gsap.set('.project-grid-item', { opacity: 1, y: 0 })
     
-    // Immediate full-screen showcase reveal from top
-    tl.fromTo('.showcase-container', 
-      { opacity: 0, y: -50 },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
-    )
-    // Staggered reveal of items from top to bottom
-    .fromTo('.project-grid-item',
-      { opacity: 0, y: -30 },
-      { 
-        opacity: 1, 
-        y: 0,
-        duration: 0.4, 
-        ease: "power2.out",
-        stagger: {
-          amount: 0.8,
-          from: "start",
-          grid: "auto",
-          axis: "y"
-        }
-      }, "-=0.4"
-    )
-    
-    return tl
+    // Return empty timeline for compatibility
+    return gsap.timeline()
   }
 
   // Reset position to center

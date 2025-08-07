@@ -42,13 +42,16 @@
       @touchmove="gallery.handleTouchMove"
       @touchend="gallery.handleTouchEnd"
     >
-              <div 
-          class="showcase-wrapper" 
-          :style="{ 
-            transform: `translate3d(${scrollX}px, ${scrollY}px, 0) scale(1.1) rotate(3deg)`,
-            cursor: isDragging ? 'grabbing' : 'grab'
-          }"
-        >
+      <!-- Background Pattern to prevent black showing through -->
+      <div class="background-pattern"></div>
+      
+      <div 
+        class="showcase-wrapper" 
+        :style="{ 
+          transform: `translate3d(${scrollX}px, ${scrollY}px, 0) scale(1.1) rotate(3deg)`,
+          cursor: isDragging ? 'grabbing' : 'grab'
+        }"
+      >
         <!-- Grid Project Showcases - Scroll-based infinite display -->
         <div 
           v-for="project in visibleProjects" 
@@ -83,7 +86,7 @@
               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             
-                        <!-- Overlay -->
+            <!-- Overlay -->
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
           </div>
@@ -1195,9 +1198,9 @@ const getGridPosition = (gridX, gridY) => {
   const itemWidth = baseWidth * scale
   const itemHeight = baseHeight * scale
   
-  // Square grid tessellation calculations
+  // Square grid tessellation calculations with tighter spacing to prevent gaps
   // For squares, horizontal and vertical spacing are equal to the width
-  const spacing = itemWidth * 0.9 // Slight gap between squares
+  const spacing = itemWidth * 0.85 // Tighter spacing to prevent black gaps
   
   return {
     position: 'absolute',
@@ -1530,10 +1533,10 @@ const viewportBuffer = 2 // Number of grid cells beyond viewport to render - red
 const updateVisibleProjects = () => {
   const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
   const itemWidth = 350 * scale
-  const spacing = itemWidth * 0.9
+  const spacing = itemWidth * 0.85 // Match the spacing from getGridPosition
   
-  // Calculate viewport bounds with buffer
-  const buffer = spacing * viewportBuffer
+  // Calculate viewport bounds with larger buffer to prevent gaps during fast scrolling
+  const buffer = spacing * (viewportBuffer + 2) // Increased buffer for better coverage
   const viewportLeft = -scrollX.value - buffer
   const viewportRight = -scrollX.value + clientWidth.value + buffer
   const viewportTop = -scrollY.value - buffer
@@ -1546,7 +1549,7 @@ const updateVisibleProjects = () => {
   const endY = Math.ceil(viewportBottom / spacing)
   
   const newVisibleProjects = []
-  const maxProjects = 100 // Limit maximum visible projects for performance
+  const maxProjects = 150 // Increased limit for better coverage
   
   // Generate projects for visible grid area
   for (let x = startX; x <= endX && newVisibleProjects.length < maxProjects; x++) {
@@ -1586,13 +1589,13 @@ const throttledUpdateVisibleProjects = () => {
   }
   scrollUpdateTimeout = setTimeout(() => {
     updateVisibleProjects()
-  }, 16) // ~60fps
+  }, 8) // More responsive updates to prevent gaps
 }
 
 // Watch for scroll changes to update visible projects
 watch([scrollX, scrollY], ([newScrollX, newScrollY]) => {
   // Only update if scroll has changed significantly
-  const scrollThreshold = 50 // pixels
+  const scrollThreshold = 30 // Reduced threshold for more responsive updates
   if (Math.abs(newScrollX - lastScrollX.value) > scrollThreshold || 
       Math.abs(newScrollY - lastScrollY.value) > scrollThreshold) {
     lastScrollX.value = newScrollX
@@ -1714,12 +1717,33 @@ onBeforeUnmount(() => {
   backface-visibility: hidden;
 }
 
+/* Background pattern to prevent black showing through during fast scrolling */
+.background-pattern {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
 .showcase-wrapper {
   position: relative;
   width: 100%;
   height: 100%;
   will-change: transform;
   transition: transform 0.1s linear;
+  /* Ensure proper coverage to prevent black showing through */
+  background: transparent;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
 }
 
 .project-grid-item {
@@ -1748,13 +1772,16 @@ onBeforeUnmount(() => {
   aspect-ratio: 1;
   /* Optimized properties for better performance */
   will-change: transform;
-  /* Simplified border for better performance */
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.01);
+  /* Enhanced border to prevent black showing through */
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 0 20px rgba(255, 255, 255, 0.02),
+    inset 0 0 20px rgba(255, 255, 255, 0.01);
   /* Enhanced transitions for premium UX */
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer !important;
-  
+  /* Ensure full coverage to prevent black background showing */
+  background: rgba(255, 255, 255, 0.01);
 }
 
   /* Minimal hover effects to prevent gaps */
@@ -1770,6 +1797,8 @@ onBeforeUnmount(() => {
   height: 100%;
   clip-path: none;
   overflow: hidden;
+  /* Ensure full coverage to prevent black showing through */
+  background: rgba(0, 0, 0, 0.1);
 }
 
 /* Add subtle gradient overlay for depth */
@@ -2238,6 +2267,9 @@ html.lenis {
   width: 100%;
   height: 100%;
   min-height: 100vh;
+  /* Ensure full coverage to prevent black showing through */
+  background: #000000;
+  overflow: hidden;
 }
 
 /* Typography styles */

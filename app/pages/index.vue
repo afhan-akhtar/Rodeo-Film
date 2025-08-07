@@ -1379,8 +1379,12 @@ onBeforeUnmount(() => {
   overflow: hidden;
   position: relative;
   background: #000;
-  /* Ensure immediate visibility */
-  opacity: 1;
+  /* Initial state for professional entrance animation */
+  opacity: 0;
+  /* Optimize for animations and mobile */
+  will-change: transform, opacity, filter;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .showcase-wrapper {
@@ -1397,6 +1401,12 @@ onBeforeUnmount(() => {
   overflow: hidden;
   /* Large hexagon shape for impressive visual impact */
   clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+  /* Initial state for professional entrance animation */
+  opacity: 0;
+  /* Optimize for animations and mobile performance */
+  will-change: transform, opacity, filter;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   /* Ensure no margin or border that could create gaps */
   margin: 0;
   border: none;
@@ -1428,10 +1438,19 @@ onBeforeUnmount(() => {
   clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
 }
 
-/* Mobile responsive adjustments for large hexagons */
+/* Mobile responsive adjustments for large hexagons and performance */
 @media (max-width: 768px) {
+  .showcase-container {
+    /* Enhanced mobile performance */
+    -webkit-overflow-scrolling: touch;
+    touch-action: none;
+  }
+  
   .project-grid-item {
     border-width: 1.5px;
+    /* Mobile performance optimizations */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
   
   .project-grid-item h3 {

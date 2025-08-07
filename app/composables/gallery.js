@@ -18,16 +18,24 @@ export const useGallery = () => {
   const smoothScrollContainer = ref(null)
   const lenisInstance = ref(null)
   
-  // Ultra-fast mouse-controlled scrolling configuration
+  // Rodeo Film-style smooth scrolling configuration
   const config = {
-    smoothness: 0.25,   // Ultra-fast response for immediate control
-    mouseMultiplier: 8, // High sensitivity for mouse movement control
-    mouseSensitivity: 3, // Additional sensitivity for mouse position
+    smoothness: 0.08,    // Ultra-smooth like professional studios
+    damping: 0.85,       // Natural momentum decay
+    mouseMultiplier: 1.2, // Refined mouse sensitivity
+    touchMultiplier: 1.8, // Enhanced touch sensitivity for mobile
+    inertiaDecay: 0.92,  // Smooth momentum fade
+    maxVelocity: 150,    // Controlled maximum speed
     boundaries: {
-      minX: -25000,    // Infinite-feeling boundaries
+      minX: -25000,
       maxX: 25000,
       minY: -25000,
       maxY: 25000
+    },
+    mobile: {
+      smoothness: 0.12,    // Slightly faster for mobile
+      touchMultiplier: 2.2, // Higher touch sensitivity
+      inertiaDecay: 0.88,   // Faster decay on mobile
     },
     lenis: {
       duration: 1.2,
@@ -58,35 +66,43 @@ export const useGallery = () => {
   let inertiaTimeout = null
   let gsapTween = null
 
-  // Ultra-fast direct scrolling animation loop
+  // Rodeo Film-style ultra-smooth scrolling animation loop
   const updateSmoothScroll = () => {
-    // Ultra-fast interpolation for immediate response
-    const deltaX = (targetX - scrollX.value) * config.smoothness
-    const deltaY = (targetY - scrollY.value) * config.smoothness
+    // Detect if we're on mobile for config selection
+    const isMobile = window.innerWidth < 768
+    const currentConfig = isMobile ? config.mobile : config
+    
+    // Ultra-smooth interpolation with professional easing
+    const deltaX = (targetX - scrollX.value) * currentConfig.smoothness
+    const deltaY = (targetY - scrollY.value) * currentConfig.smoothness
 
     scrollX.value += deltaX
     scrollY.value += deltaY
 
-    // Simplified boundary check
+    // Smooth boundary handling with elastic effect
     if (scrollX.value < config.boundaries.minX) {
-      scrollX.value = config.boundaries.minX
-      targetX = config.boundaries.minX
+      const overflow = config.boundaries.minX - scrollX.value
+      scrollX.value += overflow * 0.1
+      targetX += overflow * 0.05
     }
     if (scrollX.value > config.boundaries.maxX) {
-      scrollX.value = config.boundaries.maxX
-      targetX = config.boundaries.maxX
+      const overflow = scrollX.value - config.boundaries.maxX
+      scrollX.value -= overflow * 0.1
+      targetX -= overflow * 0.05
     }
     if (scrollY.value < config.boundaries.minY) {
-      scrollY.value = config.boundaries.minY
-      targetY = config.boundaries.minY
+      const overflow = config.boundaries.minY - scrollY.value
+      scrollY.value += overflow * 0.1
+      targetY += overflow * 0.05
     }
     if (scrollY.value > config.boundaries.maxY) {
-      scrollY.value = config.boundaries.maxY
-      targetY = config.boundaries.maxY
+      const overflow = scrollY.value - config.boundaries.maxY
+      scrollY.value -= overflow * 0.1
+      targetY -= overflow * 0.05
     }
 
-    // Continue animation - always running for instant response
-    if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
+    // Continue animation with professional-grade precision
+    if (Math.abs(deltaX) > 0.01 || Math.abs(deltaY) > 0.01 || isInertiaActive.value) {
       animationFrame = requestAnimationFrame(updateSmoothScroll)
     }
   }
@@ -125,49 +141,103 @@ export const useGallery = () => {
 
 
 
-  // Mouse movement controlled scrolling - move mouse to scroll
+  // Rodeo Film-style mouse movement controlled scrolling
+  let lastMouseMovement = { x: 0, y: 0, time: 0 }
+  let mouseVelocity = { x: 0, y: 0 }
+  
   const handleMouseMovement = (event) => {
     if (!isDragging.value) {
-      // Get mouse position relative to viewport center
-      const centerX = window.innerWidth / 2
-      const centerY = window.innerHeight / 2
+      const currentTime = performance.now()
+      const currentMouse = { x: event.clientX, y: event.clientY }
       
-      const mouseX = event.clientX
-      const mouseY = event.clientY
+      // Calculate mouse velocity for natural momentum
+      if (lastMouseMovement.time > 0) {
+        const timeDelta = currentTime - lastMouseMovement.time
+        if (timeDelta > 0) {
+          const velocityX = (currentMouse.x - lastMouseMovement.x) / timeDelta
+          const velocityY = (currentMouse.y - lastMouseMovement.y) / timeDelta
+          
+          // Smooth velocity calculation with damping
+          mouseVelocity.x = mouseVelocity.x * config.damping + velocityX * (1 - config.damping)
+          mouseVelocity.y = mouseVelocity.y * config.damping + velocityY * (1 - config.damping)
+          
+          // Apply professional-grade movement scaling
+          const sensitivity = config.mouseMultiplier * 250
+          const velocityMultiplier = Math.min(Math.sqrt(velocityX * velocityX + velocityY * velocityY) / 2, 3)
+          
+          targetX += mouseVelocity.x * sensitivity * (1 + velocityMultiplier * 0.5)
+          targetY += mouseVelocity.y * sensitivity * (1 + velocityMultiplier * 0.5)
+          
+          startSmoothScroll()
+        }
+      }
       
-      // Calculate distance from center
-      const deltaFromCenterX = (mouseX - centerX) / centerX // Normalized -1 to 1
-      const deltaFromCenterY = (mouseY - centerY) / centerY // Normalized -1 to 1
-      
-      // Apply sensitivity and update target position
-      const moveX = deltaFromCenterX * config.mouseSensitivity * 15
-      const moveY = deltaFromCenterY * config.mouseSensitivity * 15
-      
-      // Update target position for smooth following
-      targetX += moveX
-      targetY += moveY
-      
-      startSmoothScroll()
+      // Update tracking
+      lastMouseMovement = { x: currentMouse.x, y: currentMouse.y, time: currentTime }
     }
   }
 
-  // Optional wheel scrolling (much reduced)
+  // Rodeo Film-style wheel/trackpad scrolling
   const handleWheel = (event) => {
     event.preventDefault()
     
-    // Reduced wheel sensitivity - mouse movement is primary control
-    const sensitivity = config.mouseMultiplier * 0.3
-    let deltaX = event.deltaX * sensitivity
-    let deltaY = event.deltaY * sensitivity
+    // Professional wheel sensitivity with momentum
+    const isMobile = window.innerWidth < 768
+    const sensitivity = config.mouseMultiplier * (isMobile ? 1.5 : 1.0)
+    
+    // Calculate wheel velocity for natural momentum
+    const wheelVelocity = Math.sqrt(event.deltaX * event.deltaX + event.deltaY * event.deltaY)
+    const velocityMultiplier = Math.min(wheelVelocity / 50, 2) // Cap at 2x
+    
+    const deltaX = event.deltaX * sensitivity * (1 + velocityMultiplier * 0.3)
+    const deltaY = event.deltaY * sensitivity * (1 + velocityMultiplier * 0.3)
 
-    // Direct position update
+    // Apply with smooth momentum
     targetX -= deltaX
     targetY -= deltaY
 
+    // Update mouse velocity for continuity
+    mouseVelocity.x = mouseVelocity.x * 0.7 + (-deltaX * 0.1)
+    mouseVelocity.y = mouseVelocity.y * 0.7 + (-deltaY * 0.1)
+
     startSmoothScroll()
+    
+    // Clear any existing momentum and apply new inertia
+    clearTimeout(inertiaTimeout)
+    inertiaTimeout = setTimeout(() => {
+      applyProfessionalInertia()
+    }, 50)
   }
 
-  // Minimal inertia for drag only
+  // Professional Rodeo Film-style inertia
+  const applyProfessionalInertia = () => {
+    const isMobile = window.innerWidth < 768
+    const currentConfig = isMobile ? config.mobile : config
+    
+    const velocityMagnitude = Math.sqrt(mouseVelocity.x * mouseVelocity.x + mouseVelocity.y * mouseVelocity.y)
+    
+    if (velocityMagnitude > 0.5) {
+      isInertiaActive.value = true
+      
+      gsapTween = gsap.to(mouseVelocity, {
+        x: 0,
+        y: 0,
+        duration: isMobile ? 1.8 : 2.5,
+        ease: "power3.out",
+        onUpdate: () => {
+          const sensitivity = config.mouseMultiplier * 250
+          targetX += mouseVelocity.x * sensitivity * 0.5
+          targetY += mouseVelocity.y * sensitivity * 0.5
+        },
+        onComplete: () => {
+          isInertiaActive.value = false
+          gsapTween = null
+        }
+      })
+    }
+  }
+  
+  // Drag-specific inertia (for backwards compatibility)
   const applyMinimalInertia = () => {
     if (Math.abs(velocity.value.x) > 2 || Math.abs(velocity.value.y) > 2) {
       isInertiaActive.value = true
@@ -175,11 +245,11 @@ export const useGallery = () => {
       gsapTween = gsap.to(velocity.value, {
         x: 0,
         y: 0,
-        duration: 0.8,
+        duration: 1.2,
         ease: "power2.out",
         onUpdate: () => {
-          targetX += velocity.value.x * 1.5
-          targetY += velocity.value.y * 1.5
+          targetX += velocity.value.x * 2
+          targetY += velocity.value.y * 2
         },
         onComplete: () => {
           isInertiaActive.value = false
@@ -253,31 +323,72 @@ export const useGallery = () => {
     }
   }
 
+  // Enhanced mobile touch controls
+  let touchVelocity = { x: 0, y: 0 }
+  let lastTouchTime = 0
+  
   const handleTouchMove = (event) => {
     event.preventDefault()
     if (event.touches.length === 1) {
+      const currentTime = performance.now()
       const deltaX = event.touches[0].clientX - lastTouchX
       const deltaY = event.touches[0].clientY - lastTouchY
       
-      // Simple touch sensitivity
-      const touchMultiplier = config.mouseMultiplier * 1.5
-      targetX += deltaX * touchMultiplier
-      targetY += deltaY * touchMultiplier
+      // Calculate touch velocity for natural mobile momentum
+      if (lastTouchTime > 0) {
+        const timeDelta = currentTime - lastTouchTime
+        if (timeDelta > 0) {
+          const velocityX = deltaX / timeDelta
+          const velocityY = deltaY / timeDelta
+          
+          // Smooth touch velocity with damping
+          touchVelocity.x = touchVelocity.x * config.mobile.inertiaDecay + velocityX * (1 - config.mobile.inertiaDecay)
+          touchVelocity.y = touchVelocity.y * config.mobile.inertiaDecay + velocityY * (1 - config.mobile.inertiaDecay)
+        }
+      }
       
-      // Simple velocity update
-      velocity.value.x = deltaX * 0.4
-      velocity.value.y = deltaY * 0.4
+      // Professional mobile touch sensitivity
+      const touchMultiplier = config.touchMultiplier * 3
+      const velocityBoost = Math.min(Math.sqrt(touchVelocity.x * touchVelocity.x + touchVelocity.y * touchVelocity.y) / 5, 2)
+      
+      targetX += deltaX * touchMultiplier * (1 + velocityBoost * 0.5)
+      targetY += deltaY * touchMultiplier * (1 + velocityBoost * 0.5)
+      
+      // Update for drag compatibility
+      velocity.value.x = deltaX * 0.8
+      velocity.value.y = deltaY * 0.8
       
       lastTouchX = event.touches[0].clientX
       lastTouchY = event.touches[0].clientY
+      lastTouchTime = currentTime
       
       startSmoothScroll()
     }
   }
 
   const handleTouchEnd = () => {
-    // Apply minimal inertia after touch release
-    applyMinimalInertia()
+    // Apply professional mobile inertia
+    const velocityMagnitude = Math.sqrt(touchVelocity.x * touchVelocity.x + touchVelocity.y * touchVelocity.y)
+    
+    if (velocityMagnitude > 1) {
+      isInertiaActive.value = true
+      
+      gsapTween = gsap.to(touchVelocity, {
+        x: 0,
+        y: 0,
+        duration: 2.0,
+        ease: "power3.out",
+        onUpdate: () => {
+          const sensitivity = config.touchMultiplier * 300
+          targetX += touchVelocity.x * sensitivity * 0.4
+          targetY += touchVelocity.y * sensitivity * 0.4
+        },
+        onComplete: () => {
+          isInertiaActive.value = false
+          gsapTween = null
+        }
+      })
+    }
   }
 
   // Enhanced keyboard navigation for large hexagons
@@ -466,17 +577,59 @@ export const useGallery = () => {
     })
   }
 
-  // No page entrance animations - immediate display
+  // Rodeo Film-style professional entrance animation
   const animatePageEnter = () => {
-    // Immediately show all content without animations
-    gsap.set('.showcase-container', { opacity: 1, y: 0 })
-    gsap.set('.project-grid-item', { opacity: 1, y: 0 })
+    // Set initial state - professional hide
+    gsap.set('.showcase-container', { 
+      opacity: 0,
+      scale: 0.98,
+      filter: 'blur(10px)'
+    })
+    gsap.set('.project-grid-item', { 
+      opacity: 0,
+      scale: 0.95,
+      y: 20,
+      filter: 'blur(5px)'
+    })
     
-    // Start mouse movement tracking immediately
-    startSmoothScroll()
+    // Create professional timeline
+    const tl = gsap.timeline({
+      onComplete: () => {
+        // Start mouse movement tracking after animation
+        startSmoothScroll()
+        
+        // Clear any filters for performance
+        gsap.set('.showcase-container', { filter: 'none' })
+        gsap.set('.project-grid-item', { filter: 'none' })
+      }
+    })
     
-    // Return empty timeline for compatibility
-    return gsap.timeline()
+    // Professional container entrance
+    tl.to('.showcase-container', {
+      opacity: 1,
+      scale: 1,
+      filter: 'blur(0px)',
+      duration: 1.5,
+      ease: "power3.out"
+    })
+    
+    // Staggered grid items animation - Rodeo Film style
+    .to('.project-grid-item', {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      duration: 1.2,
+      stagger: {
+        amount: 2.0,
+        from: "center",
+        grid: "auto",
+        ease: "power2.inOut"
+      },
+      ease: "power3.out"
+    }, "-=1.0") // Start 1s before container finishes
+    
+    return tl
   }
 
   // Reset position to center

@@ -58,7 +58,9 @@
           :style="getGridPosition(project.gridX, project.gridY)"
           @mouseenter="handleEnhancedHover($event, project)"
           @mouseleave="handleEnhancedLeave($event, project)"
+          @mousemove="handleEnhancedHover($event, project)"
           @click="handleProjectClick($event, project)"
+          :title="project.showcase_title"
         >
           <!-- Background Image/Video -->
           <div class="relative w-full h-full overflow-hidden group grid-content">
@@ -90,7 +92,7 @@
               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             
-            <!-- Overlay -->
+                        <!-- Overlay -->
             <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
           </div>
@@ -106,6 +108,23 @@
           </div>
         </div>
       </div>
+      
+      <!-- Simple Title Tooltip -->
+      <Teleport to="body">
+        <div 
+          v-if="hoveredProject"
+          class="fixed z-[9999] pointer-events-none"
+          :style="{ 
+            left: cursorX + 20 + 'px', 
+            top: cursorY - 60 + 'px',
+            transform: 'translateX(-50%)'
+          }"
+        >
+          <div class="bg-black/90 backdrop-blur-sm px-4 py-3 rounded-none border border-white/20 shadow-2xl">
+            <h3 class="text-white font-light text-sm tracking-wider text-center whitespace-nowrap">{{ hoveredProject.showcase_title }}</h3>
+          </div>
+        </div>
+      </Teleport>
     </div>
 
     <!-- Side Menu Overlay -->
@@ -577,6 +596,11 @@ const imageAnimations = ref(new Map()) // Track image animation intervals
 const currentHoveredPlaylist = ref(null)
 const currentHoveredAbout = ref(null)
 
+// Cursor tracking for tooltip
+const cursorX = ref(0)
+const cursorY = ref(0)
+const hoveredProject = ref(null)
+
 // Video debounce utility to prevent conflicts
 const videoDebounceTimers = new Map()
 
@@ -735,6 +759,13 @@ const setVideoRef = (el, project) => {
 const handleEnhancedHover = (event, project) => {
   const projectKey = `${project.id}-${project.gridX}-${project.gridY}`
   
+  // Set hovered project for tooltip
+  hoveredProject.value = project
+  
+  // Update cursor position
+  cursorX.value = event.clientX
+  cursorY.value = event.clientY
+  
   // Apply GSAP hover animation
   gallery.animateItemHover(event.currentTarget, project)
   
@@ -789,6 +820,9 @@ const handleEnhancedHover = (event, project) => {
 
 const handleEnhancedLeave = (event, project) => {
   const projectKey = `${project.id}-${project.gridX}-${project.gridY}`
+  
+  // Clear hovered project for tooltip immediately
+  hoveredProject.value = null
   
   // Apply GSAP leave animation
   gallery.animateItemLeave(event.currentTarget)
@@ -1336,9 +1370,17 @@ onMounted(async () => {
     }
     window.addEventListener('scroll', handleScroll)
     
+    // Add global mouse move handler for cursor tracking
+    const handleMouseMove = (event) => {
+      cursorX.value = event.clientX
+      cursorY.value = event.clientY
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    
     // Store handlers for cleanup
     window._resizeHandler = handleResize
     window._scrollHandler = handleScroll
+    window._mouseMoveHandler = handleMouseMove
     
     // Initialize GSAP gallery functionality
     await gallery.initializeGallery()
@@ -1355,6 +1397,10 @@ onBeforeUnmount(() => {
     if (window._scrollHandler) {
       window.removeEventListener('scroll', window._scrollHandler)
       delete window._scrollHandler
+    }
+    if (window._mouseMoveHandler) {
+      window.removeEventListener('mousemove', window._mouseMoveHandler)
+      delete window._mouseMoveHandler
     }
     
     // Clear all image animation intervals
@@ -1414,7 +1460,7 @@ onBeforeUnmount(() => {
   backface-visibility: hidden;
   /* Enhanced styling for premium feel */
   position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   /* Ensure no margin or border that could create gaps */
   margin: 0;
   border: none;
@@ -1434,19 +1480,19 @@ onBeforeUnmount(() => {
     inset 0 0 20px rgba(255, 255, 255, 0.02);
   /* Enhanced transitions for premium UX */
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
+  cursor: pointer !important;
   
 }
 
-/* Enhanced hover effects for premium UX */
-.project-grid-item:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 
-    0 0 30px rgba(255, 255, 255, 0.08),
-    0 0 60px rgba(120, 119, 198, 0.1),
-    inset 0 0 30px rgba(255, 255, 255, 0.05);
-  transform: scale(1.02);
-}
+  /* Enhanced hover effects for premium UX */
+  .project-grid-item:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 
+      0 0 40px rgba(255, 255, 255, 0.12),
+      0 0 80px rgba(120, 119, 198, 0.15),
+      inset 0 0 40px rgba(255, 255, 255, 0.08);
+    transform: scale(1.03);
+  }
 
 /* GSAP handles all hover animations - no CSS hover needed */
 
@@ -1492,7 +1538,17 @@ onBeforeUnmount(() => {
 
 .project-grid-item:hover .grid-content video,
 .project-grid-item:hover .grid-content img {
-  transform: scale(1.05);
+  transform: scale(1.08);
+}
+
+/* Hover title animations */
+.project-grid-item:hover .absolute.inset-0.flex {
+  transform: scale(1);
+}
+
+.project-grid-item .absolute.inset-0.flex {
+  transform: scale(0.95);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Mobile responsive adjustments for large hexagons and performance */

@@ -18,12 +18,12 @@ export const useGallery = () => {
   const smoothScrollContainer = ref(null)
   const lenisInstance = ref(null)
   
-  // Ultra-smooth scrolling configuration
+  // Ultra-fluid smooth scrolling configuration
   const config = {
-    smoothness: 0.08,    // Much smoother interpolation
-    trackpadMultiplier: 1.8, // Balanced trackpad sensitivity
-    touchMultiplier: 2.2, // Balanced touch sensitivity for mobile
-    maxVelocity: 150,    // Controlled speed limit
+    smoothness: 0.06,    // Ultra-fluid interpolation
+    trackpadMultiplier: 1.6, // Refined trackpad sensitivity
+    touchMultiplier: 2.0, // Refined touch sensitivity for mobile
+    maxVelocity: 120,    // Controlled speed limit
     directControl: true, // Enable direct speed control
     boundaries: {
       minX: -25000,
@@ -32,8 +32,8 @@ export const useGallery = () => {
       maxY: 25000
     },
     mobile: {
-      smoothness: 0.12,    // Smooth for mobile
-      touchMultiplier: 2.5, // Balanced touch sensitivity
+      smoothness: 0.09,    // Ultra-fluid for mobile
+      touchMultiplier: 2.2, // Refined touch sensitivity
     },
     lenis: {
       duration: 1.2,
@@ -77,30 +77,30 @@ export const useGallery = () => {
     scrollX.value += deltaX
     scrollY.value += deltaY
 
-    // Smooth boundary handling
+    // Ultra-fluid boundary handling
     if (scrollX.value < config.boundaries.minX) {
       const overflow = config.boundaries.minX - scrollX.value
-      scrollX.value += overflow * 0.1
-      targetX += overflow * 0.05
+      scrollX.value += overflow * 0.08
+      targetX += overflow * 0.04
     }
     if (scrollX.value > config.boundaries.maxX) {
       const overflow = scrollX.value - config.boundaries.maxX
-      scrollX.value -= overflow * 0.1
-      targetX -= overflow * 0.05
+      scrollX.value -= overflow * 0.08
+      targetX -= overflow * 0.04
     }
     if (scrollY.value < config.boundaries.minY) {
       const overflow = config.boundaries.minY - scrollY.value
-      scrollY.value += overflow * 0.1
-      targetY += overflow * 0.05
+      scrollY.value += overflow * 0.08
+      targetY += overflow * 0.04
     }
     if (scrollY.value > config.boundaries.maxY) {
       const overflow = scrollY.value - config.boundaries.maxY
-      scrollY.value -= overflow * 0.1
-      targetY -= overflow * 0.05
+      scrollY.value -= overflow * 0.08
+      targetY -= overflow * 0.04
     }
 
-    // Always continue animation for ultra-smooth movement
-    if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
+    // Always continue animation for ultra-fluid movement
+    if (Math.abs(deltaX) > 0.0005 || Math.abs(deltaY) > 0.0005) {
       animationFrame = requestAnimationFrame(updateSmoothScroll)
     }
   }

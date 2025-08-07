@@ -33,6 +33,7 @@
     <!-- Full Screen Honeycomb Showcase -->
     <div 
       class="showcase-container"
+      style="transform: scale(1.1) rotate(3deg);"
       @wheel="gallery.handleWheel" 
       @mousedown="gallery.handleMouseDown"
       @mousemove="gallery.handleMouseMove"
@@ -1694,14 +1695,9 @@ onBeforeUnmount(() => {
   
 }
 
-  /* Enhanced hover effects for premium UX */
+  /* Minimal hover effects to prevent gaps */
   .project-grid-item:hover {
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 
-      0 0 40px rgba(255, 255, 255, 0.12),
-      0 0 80px rgba(120, 119, 198, 0.15),
-      inset 0 0 40px rgba(255, 255, 255, 0.08);
-    transform: scale(1.03);
+    z-index: 10 !important;
   }
 
 /* GSAP handles all hover animations - no CSS hover needed */
@@ -1748,7 +1744,7 @@ onBeforeUnmount(() => {
 
 .project-grid-item:hover .grid-content video,
 .project-grid-item:hover .grid-content img {
-  transform: scale(1.08);
+  transform: scale(1.02);
 }
 
 /* Hover title animations */

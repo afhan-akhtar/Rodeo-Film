@@ -486,24 +486,30 @@ export const useGallery = () => {
     })
   }
 
-  // Page transition animations
+  // Page transition animations - immediate top-to-bottom reveal
   const animatePageEnter = () => {
     const tl = gsap.timeline()
     
+    // Immediate showcase container reveal from top
     tl.fromTo('.showcase-container', 
-      { opacity: 0, scale: 1.1 },
-      { opacity: 1, scale: 1, duration: 1, ease: "power2.out" }
+      { opacity: 0, y: -100 },
+      { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
     )
+    // Staggered reveal of items from top to bottom
     .fromTo('.project-grid-item',
-      { opacity: 0, y: 50, rotationX: -20 },
+      { opacity: 0, y: -30 },
       { 
         opacity: 1, 
-        y: 0, 
-        rotationX: 0,
-        duration: 0.8, 
+        y: 0,
+        duration: 0.4, 
         ease: "power2.out",
-        stagger: 0.1
-      }, "-=0.5"
+        stagger: {
+          amount: 0.8,
+          from: "start",
+          grid: "auto",
+          axis: "y"
+        }
+      }, "-=0.4"
     )
     
     return tl
@@ -571,8 +577,7 @@ export const useGallery = () => {
     // Create parallax effects
     createParallaxEffect()
     
-    // Animate page entrance
-    animatePageEnter()
+    // Note: animatePageEnter is called manually from onLoadingComplete for immediate response
   }
 
   return {

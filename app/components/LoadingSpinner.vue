@@ -142,9 +142,8 @@ const animateProgress = () => {
       }
     },
     onComplete: () => {
-      setTimeout(() => {
-        animateExit()
-      }, 500)
+      // Remove delay for immediate transition to showcase
+      animateExit()
     }
   })
 }
@@ -193,15 +192,15 @@ const animateExit = () => {
     stagger: 0.1
   }, "-=0.3")
   
-  // Fade out overlay
+  // Fade out overlay faster for immediate showcase transition
   tl.to('.loading-overlay', {
     opacity: 0,
-    duration: 0.5,
+    duration: 0.3,
     ease: "power2.in",
     onComplete: () => {
       emit('complete')
     }
-  }, "-=0.2")
+  }, "-=0.1")
 }
 
 const startLoading = () => {

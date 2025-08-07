@@ -4,7 +4,7 @@
     <!-- Loading Screen -->
     <LoadingSpinner 
       :is-visible="showLoading" 
-      :duration="2500"
+      :duration="800"
       @complete="onLoadingComplete"
     />
     <!-- Navigation -->
@@ -573,11 +573,13 @@ const currentHoveredAbout = ref(null)
 // Video debounce utility to prevent conflicts
 const videoDebounceTimers = new Map()
 
-// Loading completion handler
+// Loading completion handler - immediate showcase reveal
 const onLoadingComplete = () => {
   showLoading.value = false
-  // Trigger entrance animations for the main content
-  gallery.animatePageEnter()
+  // Immediately trigger entrance animations with no delay
+  nextTick(() => {
+    gallery.animatePageEnter()
+  })
 }
 
 const toggleMenu = () => {

@@ -1162,14 +1162,11 @@ const clientHeight = ref(1080)
 const isVideoInViewport = (project) => {
   const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
   const itemWidth = 350 * scale
-  const horizontalSpacing = itemWidth * 0.75
-  const verticalSpacing = itemWidth * 0.866
+  const spacing = itemWidth * 0.9
   
   // Calculate project position
-  const isOddRow = project.gridY % 2 === 1
-  const offsetX = isOddRow ? horizontalSpacing * 0.5 : 0
-  const projectX = project.gridX * horizontalSpacing + offsetX + scrollX.value
-  const projectY = project.gridY * verticalSpacing + scrollY.value
+  const projectX = project.gridX * spacing + scrollX.value
+  const projectY = project.gridY * spacing + scrollY.value
   
   // Define viewport bounds with large buffer to ensure no empty areas
   const buffer = itemWidth * 4  // Large buffer to load videos well before they're needed
@@ -1187,31 +1184,25 @@ const isVideoInViewport = (project) => {
   )
 }
 
-// Position each grid item in large hexagonal honeycomb pattern across full screen
+// Position each grid item in square grid pattern across full screen
 const getGridPosition = (gridX, gridY) => {
-  // Large hexagon cells for impressive visual impact
+  // Large square cells for clean, modern look
   const baseWidth = 350  // Large cells for better visual impact
-  const baseHeight = Math.round(baseWidth / 1.154) // Perfect hexagon height ratio
+  const baseHeight = baseWidth // Square aspect ratio
   
   // Responsive scaling based on viewport
   const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
   const itemWidth = baseWidth * scale
   const itemHeight = baseHeight * scale
   
-  // Perfect hexagonal tessellation calculations for large honeycomb
-  // For a regular hexagon with width W, the horizontal spacing is W * 3/4
-  // and the vertical spacing is W * sqrt(3)/2 ≈ W * 0.866
-  const horizontalSpacing = itemWidth * 0.75
-  const verticalSpacing = itemWidth * 0.866
-  
-  // Hexagonal positioning: offset every other row by half horizontal spacing
-  const isOddRow = gridY % 2 === 1
-  const offsetX = isOddRow ? horizontalSpacing * 0.5 : 0
+  // Square grid tessellation calculations
+  // For squares, horizontal and vertical spacing are equal to the width
+  const spacing = itemWidth * 0.9 // Slight gap between squares
   
   return {
     position: 'absolute',
-    left: `${gridX * horizontalSpacing + offsetX}px`,
-    top: `${gridY * verticalSpacing}px`,
+    left: `${gridX * spacing}px`,
+    top: `${gridY * spacing}px`,
     width: `${itemWidth}px`,
     height: `${itemHeight}px`,
     zIndex: 1
@@ -1528,16 +1519,15 @@ const playlists = [
   }
 ]
 
-// Create persistent large hexagonal honeycomb grid that doesn't hide on scroll
+// Create persistent large square grid that doesn't hide on scroll
 const gridProjects = computed(() => {
   const grid = []
   
-  // Calculate viewport bounds for large hexagon grid
+  // Calculate viewport bounds for large square grid
   const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
   const itemWidth = 350 * scale
-  const itemHeight = Math.round(itemWidth / 1.154)
-  const horizontalSpacing = itemWidth * 0.75
-  const verticalSpacing = itemWidth * 0.866
+  const itemHeight = itemWidth // Square aspect ratio
+  const spacing = itemWidth * 0.9 // Slight gap between squares
   
   // Create optimized grid coverage for better performance
   const gridRange = 20  // Reduced range for better performance while maintaining coverage
@@ -1546,14 +1536,14 @@ const gridProjects = computed(() => {
   const startY = -gridRange
   const endY = gridRange
   
-  // Generate persistent hexagon grid items across large area
+  // Generate persistent square grid items across large area
   for (let x = startX; x < endX; x++) {
     for (let y = startY; y < endY; y++) {
-      // Use modulo to cycle through projects infinitely
-      const projectIndex = ((Math.abs(x) + Math.abs(y)) % projects.length)
+      // Use a more sophisticated cycling pattern to ensure good distribution
+      const projectIndex = Math.abs((x * 3 + y * 7) % projects.length)
       const project = projects[projectIndex]
       
-      // Always add hexagons with content (all projects have content)
+      // Always add squares with content (all projects have content)
       grid.push({
         ...project,
         gridX: x,
@@ -1673,9 +1663,9 @@ onBeforeUnmount(() => {
   display: block;
   background: transparent;
   overflow: hidden;
-  /* Large hexagon shape for impressive visual impact */
-  clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
-  /* Always visible hexagons */
+  /* Square shape for clean, modern look */
+  clip-path: none;
+  /* Always visible squares */
   opacity: 1;
   /* Optimize for animations and mobile performance */
   will-change: transform, opacity, filter;
@@ -1691,8 +1681,8 @@ onBeforeUnmount(() => {
   transform: translate3d(0, 0, 0);
   transform-style: preserve-3d;
   backface-visibility: hidden;
-  /* Perfect hexagon aspect ratio for large cells */
-  aspect-ratio: 1.154;
+  /* Perfect square aspect ratio for large cells */
+  aspect-ratio: 1;
   /* Optimized properties for better performance */
   will-change: transform;
   /* Simplified border for better performance */
@@ -1720,7 +1710,7 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   height: 100%;
-  clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+  clip-path: none;
   overflow: hidden;
 }
 
@@ -1747,7 +1737,7 @@ onBeforeUnmount(() => {
 
 .grid-content video,
 .grid-content img {
-  clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+  clip-path: none;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

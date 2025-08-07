@@ -18,14 +18,13 @@ export const useGallery = () => {
   const smoothScrollContainer = ref(null)
   const lenisInstance = ref(null)
   
-  // Ultra-smooth two-finger trackpad scrolling configuration
+  // Direct speed-controlled scrolling configuration
   const config = {
-    smoothness: 0.05,    // Ultra-smooth for premium feel
-    damping: 0.88,       // Natural momentum decay
-    trackpadMultiplier: 0.8, // Refined trackpad sensitivity
-    touchMultiplier: 2.0, // Enhanced touch sensitivity for mobile
-    inertiaDecay: 0.92,  // Smooth momentum fade
-    maxVelocity: 120,    // Controlled maximum speed
+    smoothness: 0.15,    // Faster response for direct control
+    trackpadMultiplier: 2.5, // Direct trackpad sensitivity
+    touchMultiplier: 3.0, // Enhanced touch sensitivity for mobile
+    maxVelocity: 200,    // Higher speed limit for direct control
+    directControl: true, // Enable direct speed control
     boundaries: {
       minX: -25000,
       maxX: 25000,
@@ -33,9 +32,8 @@ export const useGallery = () => {
       maxY: 25000
     },
     mobile: {
-      smoothness: 0.08,    // Optimized for mobile
-      touchMultiplier: 2.5, // Higher touch sensitivity
-      inertiaDecay: 0.85,   // Faster decay on mobile
+      smoothness: 0.2,     // Faster for mobile direct control
+      touchMultiplier: 3.5, // Higher touch sensitivity
     },
     lenis: {
       duration: 1.2,
@@ -66,43 +64,39 @@ export const useGallery = () => {
   let inertiaTimeout = null
   let gsapTween = null
 
-  // Ultra-smooth trackpad-only scrolling animation loop
+  // Direct speed-controlled scrolling animation loop
   const updateSmoothScroll = () => {
     // Detect if we're on mobile for config selection
     const isMobile = window.innerWidth < 768
     const currentConfig = isMobile ? config.mobile : config
     
-    // Ultra-smooth interpolation with premium easing
+    // Direct speed control interpolation
     const deltaX = (targetX - scrollX.value) * currentConfig.smoothness
     const deltaY = (targetY - scrollY.value) * currentConfig.smoothness
 
     scrollX.value += deltaX
     scrollY.value += deltaY
 
-    // Premium boundary handling with elastic effect
+    // Simple boundary handling for direct control
     if (scrollX.value < config.boundaries.minX) {
-      const overflow = config.boundaries.minX - scrollX.value
-      scrollX.value += overflow * 0.08
-      targetX += overflow * 0.04
+      scrollX.value = config.boundaries.minX
+      targetX = config.boundaries.minX
     }
     if (scrollX.value > config.boundaries.maxX) {
-      const overflow = scrollX.value - config.boundaries.maxX
-      scrollX.value -= overflow * 0.08
-      targetX -= overflow * 0.04
+      scrollX.value = config.boundaries.maxX
+      targetX = config.boundaries.maxX
     }
     if (scrollY.value < config.boundaries.minY) {
-      const overflow = config.boundaries.minY - scrollY.value
-      scrollY.value += overflow * 0.08
-      targetY += overflow * 0.04
+      scrollY.value = config.boundaries.minY
+      targetY = config.boundaries.minY
     }
     if (scrollY.value > config.boundaries.maxY) {
-      const overflow = scrollY.value - config.boundaries.maxY
-      scrollY.value -= overflow * 0.08
-      targetY -= overflow * 0.04
+      scrollY.value = config.boundaries.maxY
+      targetY = config.boundaries.maxY
     }
 
-    // Continue animation with ultra-smooth precision
-    if (Math.abs(deltaX) > 0.005 || Math.abs(deltaY) > 0.005 || isInertiaActive.value) {
+    // Continue animation for direct control
+    if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
       animationFrame = requestAnimationFrame(updateSmoothScroll)
     }
   }
@@ -151,7 +145,10 @@ export const useGallery = () => {
     return
   }
 
-  // Ultra-smooth two-finger trackpad scrolling only
+  // Direct speed-controlled trackpad scrolling
+  let currentTrackpadSpeed = { x: 0, y: 0 }
+  let lastTrackpadTime = 0
+  
   const handleWheel = (event) => {
     event.preventDefault()
     
@@ -163,58 +160,51 @@ export const useGallery = () => {
       return // Block single mouse wheel scrolling
     }
     
+    const currentTime = performance.now()
     const isMobile = window.innerWidth < 768
     const sensitivity = config.trackpadMultiplier * (isMobile ? 1.2 : 1.0)
     
-    // Calculate trackpad velocity for ultra-smooth momentum
-    const trackpadVelocityMagnitude = Math.sqrt(event.deltaX * event.deltaX + event.deltaY * event.deltaY)
-    const velocityMultiplier = Math.min(trackpadVelocityMagnitude / 20, 1.5) // Smooth cap
+    // Calculate real-time speed based on delta magnitude and time
+    const timeDelta = currentTime - lastTrackpadTime
     
-    const deltaX = event.deltaX * sensitivity * (1 + velocityMultiplier * 0.2)
-    const deltaY = event.deltaY * sensitivity * (1 + velocityMultiplier * 0.2)
+    if (timeDelta > 0) {
+      // Direct speed calculation - higher delta = faster movement
+      const speedX = Math.abs(event.deltaX) / (timeDelta + 1) // Add 1 to prevent division by 0
+      const speedY = Math.abs(event.deltaY) / (timeDelta + 1)
+      
+      // Update current speed for direct control
+      currentTrackpadSpeed.x = speedX
+      currentTrackpadSpeed.y = speedY
+      
+      // Calculate speed multiplier based on movement velocity
+      const speedMultiplier = Math.min((speedX + speedY) / 5, 3) // Cap at 3x
+      
+      // Apply direct movement with speed-based multiplier
+      const deltaX = event.deltaX * sensitivity * (1 + speedMultiplier * 0.5)
+      const deltaY = event.deltaY * sensitivity * (1 + speedMultiplier * 0.5)
 
-    // Apply ultra-smooth movement
-    targetX -= deltaX
-    targetY -= deltaY
+      // Direct movement - no momentum
+      targetX -= deltaX
+      targetY -= deltaY
 
-    // Update trackpad velocity for continuity
-    trackpadVelocity.x = trackpadVelocity.x * 0.8 + (-deltaX * 0.15)
-    trackpadVelocity.y = trackpadVelocity.y * 0.8 + (-deltaY * 0.15)
-
-    startSmoothScroll()
+      startSmoothScroll()
+    }
     
-    // Apply ultra-smooth inertia
+    lastTrackpadTime = currentTime
+    
+    // Clear any existing momentum - we want direct control only
     clearTimeout(inertiaTimeout)
-    inertiaTimeout = setTimeout(() => {
-      applyTrackpadInertia()
-    }, 40)
+    if (gsapTween) {
+      gsapTween.kill()
+      isInertiaActive.value = false
+    }
   }
 
-  // Ultra-smooth trackpad inertia
+  // No inertia - direct control only
   const applyTrackpadInertia = () => {
-    const isMobile = window.innerWidth < 768
-    
-    const velocityMagnitude = Math.sqrt(trackpadVelocity.x * trackpadVelocity.x + trackpadVelocity.y * trackpadVelocity.y)
-    
-    if (velocityMagnitude > 0.3) {
-      isInertiaActive.value = true
-      
-      gsapTween = gsap.to(trackpadVelocity, {
-        x: 0,
-        y: 0,
-        duration: isMobile ? 2.0 : 3.0,
-        ease: "power4.out",
-        onUpdate: () => {
-          const sensitivity = config.trackpadMultiplier * 200
-          targetX += trackpadVelocity.x * sensitivity * 0.4
-          targetY += trackpadVelocity.y * sensitivity * 0.4
-        },
-        onComplete: () => {
-          isInertiaActive.value = false
-          gsapTween = null
-        }
-      })
-    }
+    // Disabled for direct speed control
+    // Movement stops immediately when input stops
+    return
   }
   
   // Drag-specific inertia (for backwards compatibility)
@@ -262,12 +252,15 @@ export const useGallery = () => {
       const deltaX = event.clientX - lastMouseX
       const deltaY = event.clientY - lastMouseY
       
-      // Smooth drag with refined sensitivity
-      const dragMultiplier = config.trackpadMultiplier * 4
+      // Direct drag control with speed-based multiplier
+      const dragSpeed = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+      const speedMultiplier = Math.min(dragSpeed / 10, 2) // Cap at 2x
+      const dragMultiplier = config.trackpadMultiplier * 4 * (1 + speedMultiplier * 0.3)
+      
       targetX += deltaX * dragMultiplier
       targetY += deltaY * dragMultiplier
       
-      // Update velocity for smooth inertia
+      // Update velocity for minimal compatibility
       velocity.value.x = deltaX * 1.0
       velocity.value.y = deltaY * 1.0
       
@@ -281,8 +274,11 @@ export const useGallery = () => {
   const handleMouseUp = () => {
     if (isDragging.value) {
       isDragging.value = false
-      // Apply minimal inertia only for drag
-      applyMinimalInertia()
+      // No inertia for direct control - stop immediately
+      if (gsapTween) {
+        gsapTween.kill()
+        isInertiaActive.value = false
+      }
     }
   }
 
@@ -300,8 +296,8 @@ export const useGallery = () => {
     }
   }
 
-  // Enhanced mobile touch controls
-  let touchVelocity = { x: 0, y: 0 }
+  // Direct speed-controlled mobile touch controls
+  let currentTouchSpeed = { x: 0, y: 0 }
   let lastTouchTime = 0
   
   const handleTouchMove = (event) => {
@@ -311,25 +307,29 @@ export const useGallery = () => {
       const deltaX = event.touches[0].clientX - lastTouchX
       const deltaY = event.touches[0].clientY - lastTouchY
       
-      // Calculate touch velocity for natural mobile momentum
-      if (lastTouchTime > 0) {
-        const timeDelta = currentTime - lastTouchTime
-        if (timeDelta > 0) {
-          const velocityX = deltaX / timeDelta
-          const velocityY = deltaY / timeDelta
-          
-          // Smooth touch velocity with damping
-          touchVelocity.x = touchVelocity.x * config.mobile.inertiaDecay + velocityX * (1 - config.mobile.inertiaDecay)
-          touchVelocity.y = touchVelocity.y * config.mobile.inertiaDecay + velocityY * (1 - config.mobile.inertiaDecay)
-        }
+      // Calculate direct touch speed
+      const timeDelta = currentTime - lastTouchTime
+      
+      if (timeDelta > 0 && lastTouchTime > 0) {
+        // Direct speed calculation based on movement
+        const speedX = Math.abs(deltaX) / (timeDelta + 1)
+        const speedY = Math.abs(deltaY) / (timeDelta + 1)
+        
+        // Update current speed for direct control
+        currentTouchSpeed.x = speedX
+        currentTouchSpeed.y = speedY
+        
+        // Calculate speed multiplier based on touch velocity
+        const speedMultiplier = Math.min((speedX + speedY) / 3, 2.5) // Cap at 2.5x for touch
+        
+        // Apply direct movement with speed-based multiplier
+        const touchMultiplier = config.touchMultiplier * (1 + speedMultiplier * 0.3)
+        
+        targetX += deltaX * touchMultiplier
+        targetY += deltaY * touchMultiplier
+        
+        startSmoothScroll()
       }
-      
-      // Professional mobile touch sensitivity
-      const touchMultiplier = config.touchMultiplier * 3
-      const velocityBoost = Math.min(Math.sqrt(touchVelocity.x * touchVelocity.x + touchVelocity.y * touchVelocity.y) / 5, 2)
-      
-      targetX += deltaX * touchMultiplier * (1 + velocityBoost * 0.5)
-      targetY += deltaY * touchMultiplier * (1 + velocityBoost * 0.5)
       
       // Update for drag compatibility
       velocity.value.x = deltaX * 0.8
@@ -338,33 +338,15 @@ export const useGallery = () => {
       lastTouchX = event.touches[0].clientX
       lastTouchY = event.touches[0].clientY
       lastTouchTime = currentTime
-      
-      startSmoothScroll()
     }
   }
 
   const handleTouchEnd = () => {
-    // Apply professional mobile inertia
-    const velocityMagnitude = Math.sqrt(touchVelocity.x * touchVelocity.x + touchVelocity.y * touchVelocity.y)
-    
-    if (velocityMagnitude > 1) {
-      isInertiaActive.value = true
-      
-      gsapTween = gsap.to(touchVelocity, {
-        x: 0,
-        y: 0,
-        duration: 2.0,
-        ease: "power3.out",
-        onUpdate: () => {
-          const sensitivity = config.touchMultiplier * 300
-          targetX += touchVelocity.x * sensitivity * 0.4
-          targetY += touchVelocity.y * sensitivity * 0.4
-        },
-        onComplete: () => {
-          isInertiaActive.value = false
-          gsapTween = null
-        }
-      })
+    // No inertia for direct control - stop immediately
+    // Clear any existing momentum
+    if (gsapTween) {
+      gsapTween.kill()
+      isInertiaActive.value = false
     }
   }
 

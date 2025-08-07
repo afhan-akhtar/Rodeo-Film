@@ -18,13 +18,11 @@ export const useGallery = () => {
   const smoothScrollContainer = ref(null)
   const lenisInstance = ref(null)
   
-  // Fast and responsive scrolling configuration
+  // Ultra-fast mouse-controlled scrolling configuration
   const config = {
-    smoothness: 0.15,   // Much faster response
-    damping: 0.75,      // Reduced damping for quicker movement
-    maxVelocity: 200,   // Higher velocity for responsive feel
-    inertiaDelay: 100,  // Slightly more delay to prevent excessive calculations
-    mouseMultiplier: 2.5, // Much higher sensitivity for direct control
+    smoothness: 0.25,   // Ultra-fast response for immediate control
+    mouseMultiplier: 8, // High sensitivity for mouse movement control
+    mouseSensitivity: 3, // Additional sensitivity for mouse position
     boundaries: {
       minX: -25000,    // Infinite-feeling boundaries
       maxX: 25000,
@@ -60,16 +58,16 @@ export const useGallery = () => {
   let inertiaTimeout = null
   let gsapTween = null
 
-  // Fast and lightweight scrolling animation loop
+  // Ultra-fast direct scrolling animation loop
   const updateSmoothScroll = () => {
-    // Fast interpolation for immediate response
+    // Ultra-fast interpolation for immediate response
     const deltaX = (targetX - scrollX.value) * config.smoothness
     const deltaY = (targetY - scrollY.value) * config.smoothness
 
     scrollX.value += deltaX
     scrollY.value += deltaY
 
-    // Simplified boundary check (less computation)
+    // Simplified boundary check
     if (scrollX.value < config.boundaries.minX) {
       scrollX.value = config.boundaries.minX
       targetX = config.boundaries.minX
@@ -87,8 +85,8 @@ export const useGallery = () => {
       targetY = config.boundaries.maxY
     }
 
-    // Continue animation with lower threshold for better performance
-    if (Math.abs(deltaX) > 0.2 || Math.abs(deltaY) > 0.2 || isInertiaActive.value) {
+    // Continue animation - always running for instant response
+    if (Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1) {
       animationFrame = requestAnimationFrame(updateSmoothScroll)
     }
   }
@@ -127,60 +125,61 @@ export const useGallery = () => {
 
 
 
-  // Fast and responsive wheel scrolling
+  // Mouse movement controlled scrolling - move mouse to scroll
+  const handleMouseMovement = (event) => {
+    if (!isDragging.value) {
+      // Get mouse position relative to viewport center
+      const centerX = window.innerWidth / 2
+      const centerY = window.innerHeight / 2
+      
+      const mouseX = event.clientX
+      const mouseY = event.clientY
+      
+      // Calculate distance from center
+      const deltaFromCenterX = (mouseX - centerX) / centerX // Normalized -1 to 1
+      const deltaFromCenterY = (mouseY - centerY) / centerY // Normalized -1 to 1
+      
+      // Apply sensitivity and update target position
+      const moveX = deltaFromCenterX * config.mouseSensitivity * 15
+      const moveY = deltaFromCenterY * config.mouseSensitivity * 15
+      
+      // Update target position for smooth following
+      targetX += moveX
+      targetY += moveY
+      
+      startSmoothScroll()
+    }
+  }
+
+  // Optional wheel scrolling (much reduced)
   const handleWheel = (event) => {
     event.preventDefault()
     
-    // Direct and responsive sensitivity
-    const sensitivity = config.mouseMultiplier
+    // Reduced wheel sensitivity - mouse movement is primary control
+    const sensitivity = config.mouseMultiplier * 0.3
     let deltaX = event.deltaX * sensitivity
     let deltaY = event.deltaY * sensitivity
 
-    // Simple omnidirectional scrolling
-    if (event.shiftKey) {
-      // Pure horizontal scrolling
-      deltaX += event.deltaY * sensitivity
-      deltaY = 0
-    }
-
-    // Direct position update for immediate response
+    // Direct position update
     targetX -= deltaX
     targetY -= deltaY
 
-    // Update velocity for simple inertia
-    velocity.value.x = -deltaX * 0.3
-    velocity.value.y = -deltaY * 0.3
-
-    // Clear any existing inertia animations
-    if (gsapTween) {
-      gsapTween.kill()
-      isInertiaActive.value = false
-    }
-
     startSmoothScroll()
-
-    // Simple inertia with timeout
-    clearTimeout(inertiaTimeout)
-    inertiaTimeout = setTimeout(() => {
-      applySimpleInertia()
-    }, config.inertiaDelay)
   }
 
-  // Simple and fast inertia
-  const applySimpleInertia = () => {
-    const velMagnitude = Math.sqrt(velocity.value.x ** 2 + velocity.value.y ** 2)
-    
-    if (velMagnitude > 1) {
+  // Minimal inertia for drag only
+  const applyMinimalInertia = () => {
+    if (Math.abs(velocity.value.x) > 2 || Math.abs(velocity.value.y) > 2) {
       isInertiaActive.value = true
       
       gsapTween = gsap.to(velocity.value, {
         x: 0,
         y: 0,
-        duration: 1.2,
+        duration: 0.8,
         ease: "power2.out",
         onUpdate: () => {
-          targetX += velocity.value.x * 2
-          targetY += velocity.value.y * 2
+          targetX += velocity.value.x * 1.5
+          targetY += velocity.value.y * 1.5
         },
         onComplete: () => {
           isInertiaActive.value = false
@@ -208,18 +207,22 @@ export const useGallery = () => {
   }
 
   const handleMouseMove = (event) => {
+    // Handle mouse movement scrolling (primary control)
+    handleMouseMovement(event)
+    
+    // Handle dragging (secondary control)
     if (isDragging.value) {
       const deltaX = event.clientX - lastMouseX
       const deltaY = event.clientY - lastMouseY
       
-      // Direct and responsive drag
-      const dragMultiplier = config.mouseMultiplier * 2
+      // Direct drag with high sensitivity
+      const dragMultiplier = config.mouseMultiplier * 3
       targetX += deltaX * dragMultiplier
       targetY += deltaY * dragMultiplier
       
-      // Simple velocity update
-      velocity.value.x = deltaX * 0.5
-      velocity.value.y = deltaY * 0.5
+      // Update velocity for minimal inertia
+      velocity.value.x = deltaX * 0.8
+      velocity.value.y = deltaY * 0.8
       
       lastMouseX = event.clientX
       lastMouseY = event.clientY
@@ -231,8 +234,8 @@ export const useGallery = () => {
   const handleMouseUp = () => {
     if (isDragging.value) {
       isDragging.value = false
-      // Apply simple inertia
-      applySimpleInertia()
+      // Apply minimal inertia only for drag
+      applyMinimalInertia()
     }
   }
 
@@ -273,8 +276,8 @@ export const useGallery = () => {
   }
 
   const handleTouchEnd = () => {
-    // Apply simple inertia after touch release
-    applySimpleInertia()
+    // Apply minimal inertia after touch release
+    applyMinimalInertia()
   }
 
   // Enhanced keyboard navigation for large hexagons
@@ -468,6 +471,9 @@ export const useGallery = () => {
     // Immediately show all content without animations
     gsap.set('.showcase-container', { opacity: 1, y: 0 })
     gsap.set('.project-grid-item', { opacity: 1, y: 0 })
+    
+    // Start mouse movement tracking immediately
+    startSmoothScroll()
     
     // Return empty timeline for compatibility
     return gsap.timeline()

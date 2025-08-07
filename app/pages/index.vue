@@ -49,9 +49,9 @@
             cursor: isDragging ? 'grabbing' : 'grab'
           }"
         >
-        <!-- Grid Project Showcases - Always visible hexagons -->
+        <!-- Grid Project Showcases - Scroll-based infinite display -->
         <div 
-          v-for="project in gridProjects" 
+          v-for="project in visibleProjects" 
           :key="`showcase-${project.id}-${project.gridX}-${project.gridY}`"
           class="project-grid-item cursor-pointer"
           :style="getGridPosition(project.gridX, project.gridY)"
@@ -627,7 +627,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useGallery } from '~/composables/gallery'
 
 // Initialize GSAP Gallery functionality
@@ -1519,42 +1519,92 @@ const playlists = [
   }
 ]
 
-// Create persistent large square grid that doesn't hide on scroll
-const gridProjects = computed(() => {
-  const grid = []
-  
-  // Calculate viewport bounds for large square grid
+// Scroll-based infinite showcase system
+const visibleProjects = ref([])
+const projectCache = new Map() // Cache for created projects
+const lastScrollX = ref(0)
+const lastScrollY = ref(0)
+const viewportBuffer = 2 // Number of grid cells beyond viewport to render - reduced for better performance
+
+// Calculate which projects should be visible based on scroll position
+const updateVisibleProjects = () => {
   const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
   const itemWidth = 350 * scale
-  const itemHeight = itemWidth // Square aspect ratio
-  const spacing = itemWidth * 0.9 // Slight gap between squares
+  const spacing = itemWidth * 0.9
   
-  // Create optimized grid coverage for better performance
-  const gridRange = 20  // Reduced range for better performance while maintaining coverage
-  const startX = -gridRange
-  const endX = gridRange
-  const startY = -gridRange
-  const endY = gridRange
+  // Calculate viewport bounds with buffer
+  const buffer = spacing * viewportBuffer
+  const viewportLeft = -scrollX.value - buffer
+  const viewportRight = -scrollX.value + clientWidth.value + buffer
+  const viewportTop = -scrollY.value - buffer
+  const viewportBottom = -scrollY.value + clientHeight.value + buffer
   
-  // Generate persistent square grid items across large area
-  for (let x = startX; x < endX; x++) {
-    for (let y = startY; y < endY; y++) {
-      // Use a more sophisticated cycling pattern to ensure good distribution
-      const projectIndex = Math.abs((x * 3 + y * 7) % projects.length)
-      const project = projects[projectIndex]
+  // Calculate grid range needed to cover viewport
+  const startX = Math.floor(viewportLeft / spacing)
+  const endX = Math.ceil(viewportRight / spacing)
+  const startY = Math.floor(viewportTop / spacing)
+  const endY = Math.ceil(viewportBottom / spacing)
+  
+  const newVisibleProjects = []
+  const maxProjects = 100 // Limit maximum visible projects for performance
+  
+  // Generate projects for visible grid area
+  for (let x = startX; x <= endX && newVisibleProjects.length < maxProjects; x++) {
+    for (let y = startY; y <= endY && newVisibleProjects.length < maxProjects; y++) {
+      const projectKey = `${x}-${y}`
       
-      // Always add squares with content (all projects have content)
-      grid.push({
-        ...project,
-        gridX: x,
-        gridY: y,
-        id: `${project.id}-${x}-${y}`
-      })
+      // Check if project already exists in cache
+      if (projectCache.has(projectKey)) {
+        newVisibleProjects.push(projectCache.get(projectKey))
+      } else {
+        // Create new project for this grid position with better distribution
+        const projectIndex = Math.abs((x * 5 + y * 11 + (x * y) * 3) % projects.length)
+        const project = projects[projectIndex]
+        
+        const newProject = {
+          ...project,
+          gridX: x,
+          gridY: y,
+          id: `${project.id}-${x}-${y}`
+        }
+        
+        // Cache the project
+        projectCache.set(projectKey, newProject)
+        newVisibleProjects.push(newProject)
+      }
     }
   }
   
-  return grid
-})
+  visibleProjects.value = newVisibleProjects
+}
+
+// Throttled scroll update function
+let scrollUpdateTimeout = null
+const throttledUpdateVisibleProjects = () => {
+  if (scrollUpdateTimeout) {
+    clearTimeout(scrollUpdateTimeout)
+  }
+  scrollUpdateTimeout = setTimeout(() => {
+    updateVisibleProjects()
+  }, 16) // ~60fps
+}
+
+// Watch for scroll changes to update visible projects
+watch([scrollX, scrollY], ([newScrollX, newScrollY]) => {
+  // Only update if scroll has changed significantly
+  const scrollThreshold = 50 // pixels
+  if (Math.abs(newScrollX - lastScrollX.value) > scrollThreshold || 
+      Math.abs(newScrollY - lastScrollY.value) > scrollThreshold) {
+    lastScrollX.value = newScrollX
+    lastScrollY.value = newScrollY
+    throttledUpdateVisibleProjects()
+  }
+}, { flush: 'post' })
+
+// Watch for viewport size changes
+watch([clientWidth, clientHeight], () => {
+  updateVisibleProjects()
+}, { flush: 'post' })
 
 // Enhanced keyboard controls using gallery
 const handleKeyDown = (event) => {
@@ -1566,6 +1616,9 @@ onMounted(async () => {
     // Update client dimensions to actual viewport size
     clientWidth.value = window.innerWidth
     clientHeight.value = window.innerHeight
+    
+    // Initialize visible projects
+    updateVisibleProjects()
     
     // Add keyboard event listener
     window.addEventListener('keydown', handleKeyDown)
@@ -1624,6 +1677,16 @@ onBeforeUnmount(() => {
     // Clear video debounce timers
     videoDebounceTimers.forEach(timer => clearTimeout(timer))
     videoDebounceTimers.clear()
+    
+    // Clear project cache
+    projectCache.clear()
+    visibleProjects.value = []
+    
+    // Clear scroll update timeout
+    if (scrollUpdateTimeout) {
+      clearTimeout(scrollUpdateTimeout)
+      scrollUpdateTimeout = null
+    }
     
     // Cleanup GSAP gallery
     gallery.cleanup()

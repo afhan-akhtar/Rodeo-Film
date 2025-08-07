@@ -1420,7 +1420,7 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.02) 0%, transparent 50%),
     radial-gradient(circle at 40% 40%, rgba(120, 199, 255, 0.02) 0%, transparent 50%);
   /* Initial state for professional entrance animation */
-  opacity: 0;
+  opacity: 1;
   /* Optimize for animations and mobile */
   will-change: transform, opacity, filter;
   -webkit-backface-visibility: hidden;

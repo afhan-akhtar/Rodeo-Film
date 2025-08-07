@@ -60,7 +60,6 @@
           @mouseleave="handleEnhancedLeave($event, project)"
           @mousemove="handleEnhancedHover($event, project)"
           @click="handleProjectClick($event, project)"
-          :title="project.showcase_title"
         >
           <!-- Background Image/Video -->
           <div class="relative w-full h-full overflow-hidden group grid-content">
@@ -120,7 +119,7 @@
             transform: 'translateX(-50%)'
           }"
         >
-          <div class="bg-black/90 backdrop-blur-sm px-4 py-3 rounded-none border border-white/20 shadow-2xl">
+          <div class="bg-black/90 backdrop-blur-sm px-4 py-3 rounded-none border border-white/20 shadow-2xl" style="background-color: #ff2204;">
             <h3 class="text-white font-light text-sm tracking-wider text-center whitespace-nowrap">{{ hoveredProject.showcase_title }}</h3>
           </div>
         </div>

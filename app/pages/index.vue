@@ -1378,7 +1378,12 @@ onBeforeUnmount(() => {
   width: 100vw;
   overflow: hidden;
   position: relative;
-  background: #000;
+  /* Enhanced gradient background for premium feel */
+  background: 
+    radial-gradient(ellipse at center, #0a0a0a 0%, #000000 70%),
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 199, 255, 0.02) 0%, transparent 50%);
   /* Initial state for professional entrance animation */
   opacity: 0;
   /* Optimize for animations and mobile */
@@ -1407,6 +1412,9 @@ onBeforeUnmount(() => {
   will-change: transform, opacity, filter;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  /* Enhanced styling for premium feel */
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   /* Ensure no margin or border that could create gaps */
   margin: 0;
   border: none;
@@ -1419,23 +1427,72 @@ onBeforeUnmount(() => {
   /* Enhanced properties for GSAP animations */
   will-change: transform, opacity;
   perspective: 1000px;
-  /* Subtle border to define each large hexagon cell */
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  /* Immediate visibility - no animations */
-  opacity: 1;
-  /* Smooth transitions for interactions only */
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  /* Enhanced hexagonal border with gradient and glow */
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 0 20px rgba(255, 255, 255, 0.02),
+    inset 0 0 20px rgba(255, 255, 255, 0.02);
+  /* Enhanced transitions for premium UX */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  
+}
+
+/* Enhanced hover effects for premium UX */
+.project-grid-item:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 0 30px rgba(255, 255, 255, 0.08),
+    0 0 60px rgba(120, 119, 198, 0.1),
+    inset 0 0 30px rgba(255, 255, 255, 0.05);
+  transform: scale(1.02);
 }
 
 /* GSAP handles all hover animations - no CSS hover needed */
 
 .grid-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
   clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+  overflow: hidden;
+}
+
+/* Add subtle gradient overlay for depth */
+.grid-content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .grid-content video,
 .grid-content img {
   clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced hover effects for content */
+.project-grid-item:hover .grid-content::after {
+  opacity: 1;
+}
+
+.project-grid-item:hover .grid-content video,
+.project-grid-item:hover .grid-content img {
+  transform: scale(1.05);
 }
 
 /* Mobile responsive adjustments for large hexagons and performance */

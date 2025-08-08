@@ -42,9 +42,6 @@
       @touchmove="gallery.handleTouchMove"
       @touchend="gallery.handleTouchEnd"
     >
-      <!-- Background Pattern to prevent black showing through -->
-      <div class="background-pattern"></div>
-      
       <div 
         class="showcase-wrapper" 
         :style="{ 
@@ -1717,22 +1714,7 @@ onBeforeUnmount(() => {
   backface-visibility: hidden;
 }
 
-/* Background pattern to prevent black showing through during fast scrolling */
-.background-pattern {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: 
-    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.01) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-  transform: translateZ(0);
-  will-change: transform;
-}
+
 
 .showcase-wrapper {
   position: relative;

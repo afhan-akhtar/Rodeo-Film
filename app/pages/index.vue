@@ -121,13 +121,68 @@
       </Teleport>
     </div>
 
+    <!-- Demo Section for Scroll Animations -->
+    <section class="min-h-screen bg-gradient-to-b from-black to-gray-900 py-20 px-6 lg:px-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl lg:text-6xl font-bold text-white mb-6" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.1">
+            Scroll Animation Demo
+          </h2>
+          <p class="text-xl text-white/80 max-w-2xl mx-auto" data-scroll data-scroll-class="slide-up" data-scroll-delay="0.2">
+            Experience smooth scrolling with beautiful GSAP animations powered by Locomotive Scroll
+          </p>
+          <div class="mt-6 max-w-3xl mx-auto text-center" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.3">
+            <p class="text-sm text-white/60 bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4">
+              💡 <strong>Pro Tip:</strong> Use the floating controls in the bottom-right corner to adjust scroll speed and smoothness in real-time. 
+              The scrolling is optimized for mouse wheel, touchpad, and mobile touch with enhanced momentum and fluid motion.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+          <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6" data-scroll data-scroll-class="fade-in-left" data-scroll-delay="0.1">
+            <div class="w-12 h-12 bg-red-600 rounded-lg mb-4"></div>
+            <h3 class="text-xl font-bold text-white mb-2">Fade In Left</h3>
+            <p class="text-white/70">Elements slide in from the left with a smooth fade effect</p>
+          </div>
+
+          <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6" data-scroll data-scroll-class="scale-in" data-scroll-delay="0.2">
+            <div class="w-12 h-12 bg-blue-600 rounded-lg mb-4"></div>
+            <h3 class="text-xl font-bold text-white mb-2">Scale In</h3>
+            <p class="text-white/70">Cards scale up with a bouncy animation when they enter the viewport</p>
+          </div>
+
+          <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6" data-scroll data-scroll-class="fade-in-right" data-scroll-delay="0.3">
+            <div class="w-12 h-12 bg-green-600 rounded-lg mb-4"></div>
+            <h3 class="text-xl font-bold text-white mb-2">Fade In Right</h3>
+            <p class="text-white/70">Content appears from the right side with elegant timing</p>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <div class="inline-block bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-8" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.1" data-scroll-repeat>
+            <h3 class="text-2xl font-bold text-white mb-4">Repeating Animation</h3>
+            <p class="text-white/80 mb-6">This element has data-scroll-repeat, so it animates every time you scroll past it</p>
+            <div class="flex justify-center space-x-4">
+              <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scroll Controls Component -->
+    <ScrollControls />
+
     <!-- Rodeo Film Style Footer -->
-    <footer id="js-footer" class="o-footer">
+    <footer id="js-footer" class="o-footer" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.1">
       <div class="hide-first">
-        <div class="copy a-footerText">
+        <div class="copy a-footerText" data-scroll data-scroll-class="slide-up" data-scroll-delay="0.2">
           © 2024 Rodeo, all rights reserved.
         </div>
-        <div class="legas">
+        <div class="legas" data-scroll data-scroll-class="slide-up" data-scroll-delay="0.3">
           <a class="a-footerText" href="https://rodeo.film/legals">Legals</a> —
           <a class="a-footerText" href="https://troa.fr" target="_blank">Website by TROA</a>
         </div>
@@ -152,11 +207,11 @@
         
         <div class="flex flex-col items-center justify-center h-full space-y-8">
                       <nav class="text-center space-y-4">
-              <button @click="toggleProjects" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">PROJECTS</button>
-              <button @click="toggleAwards" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">AWARDS</button>
-              <button @click="toggleGallery" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">GALLERY</button>
-              <button @click="togglePlaylist" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">PLAYLIST</button>
-              <button @click="toggleAbout" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;">ABOUT</button>
+              <button @click="toggleProjects" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.1">PROJECTS</button>
+              <button @click="toggleAwards" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.2">AWARDS</button>
+              <button @click="toggleGallery" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.3">GALLERY</button>
+              <button @click="togglePlaylist" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.4">PLAYLIST</button>
+              <button @click="toggleAbout" class="block w-full px-6 py-3 bg-white/10 border border-white/20 rounded-lg font-bold tracking-wider text-white hover:bg-red-600 hover:border-red-600 hover:text-white hover:scale-105 transition-all duration-300 cursor-pointer hover-glow backdrop-blur-sm" style="font-size: 12px;" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.5">ABOUT</button>
             </nav>
         </div>
         
@@ -202,12 +257,15 @@
         
         <div class="space-y-4">
           <div 
-            v-for="project in projectVideos" 
+            v-for="(project, index) in projectVideos" 
             :key="project.id"
             class="project-link group cursor-pointer"
             @mouseenter="handleProjectHover(project)"
             @mouseleave="handleProjectLeave"
             @click="handleProjectClick(project)"
+            data-scroll 
+            data-scroll-class="fade-in" 
+            :data-scroll-delay="0.1 + (index * 0.1)"
           >
             <div class="border-b border-white/30 pb-3 group-hover:border-red-400/60 transition-all duration-300">
               <h3 class="font-bold tracking-wider text-white group-hover:text-red-300 hover:scale-105 transition-all duration-300 mb-1" style="font-size: 14px;">
@@ -275,12 +333,15 @@
         
         <div class="space-y-4">
           <div 
-            v-for="award in awardVideos" 
+            v-for="(award, index) in awardVideos" 
             :key="award.id"
             class="award-link group cursor-pointer"
             @mouseenter="handleAwardHover(award)"
             @mouseleave="handleAwardLeave"
             @click="handleAwardClick(award)"
+            data-scroll 
+            data-scroll-class="fade-in" 
+            :data-scroll-delay="0.1 + (index * 0.1)"
           >
             <div class="border-b border-white/30 pb-3 group-hover:border-red-400/60 transition-all duration-300">
               <h3 class="font-bold tracking-wider text-white group-hover:text-red-300 hover:scale-105 transition-all duration-300 mb-1" style="font-size: 14px;">

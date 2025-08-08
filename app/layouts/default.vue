@@ -1,5 +1,6 @@
 <template>
   <div data-scroll-container class="layout-container">
+    <ScrollProgress />
     <slot />
   </div>
 </template>
@@ -62,5 +63,73 @@ onMounted(() => {
 [data-scroll-container] {
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Enhanced scroll container with better performance */
+[data-scroll-container] {
+  /* Improved performance with hardware acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  
+  /* Smooth scrolling experience */
+  scroll-behavior: smooth;
+  
+  /* Better touch handling */
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Optimize scroll elements for better performance */
+[data-scroll] {
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  
+  /* Smooth transitions */
+  transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Enhanced reveal animations */
+[data-scroll].is-revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1) translateZ(0);
+}
+
+/* Parallax elements optimization */
+[data-scroll-speed] {
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Scale elements optimization */
+[data-scroll-scale] {
+  will-change: transform;
+  transform-origin: center center;
+  backface-visibility: hidden;
+}
+
+/* Smooth momentum scrolling */
+[data-scroll-container] {
+  /* Enhanced momentum */
+  scroll-behavior: smooth;
+  
+  /* Better performance */
+  will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Optimize for reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  [data-scroll] {
+    transition: none !important;
+  }
+  
+  [data-scroll-container] {
+    scroll-behavior: auto;
+  }
 }
 </style> 

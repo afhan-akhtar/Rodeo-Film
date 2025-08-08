@@ -16,13 +16,12 @@ export const useGallery = () => {
   const isInertiaActive = ref(false)
   const smoothScrollContainer = ref(null)
   
-  // Configuration - Optimized for mobile speed
+  // Configuration
   const config = {
-    smoothness: 0.15, // Increased from 0.1 for faster response
-    damping: 0.7, // Reduced from 0.8 for less resistance
-    maxVelocity: 80, // Increased from 50 for faster movement
-    inertiaDelay: 80, // Reduced from 100 for quicker inertia
-    touchMultiplier: 3.0, // Increased from 2.0 for faster touch response
+    smoothness: 0.1,
+    damping: 0.8,
+    maxVelocity: 80,
+    inertiaDelay: 100,
     boundaries: {
       minX: -5000,
       maxX: 5000,
@@ -41,15 +40,6 @@ export const useGallery = () => {
   let animationFrame = null
   let inertiaTimeout = null
   let gsapTween = null
-  
-  // Mobile detection
-  const isMobile = () => {
-    if (process.client) {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-             window.innerWidth <= 768
-    }
-    return false
-  }
 
   // Smooth scrolling animation loop
   const updateSmoothScroll = () => {
@@ -105,15 +95,15 @@ export const useGallery = () => {
     if (Math.abs(velocity.value.x) > 1 || Math.abs(velocity.value.y) > 1) {
       isInertiaActive.value = true
       
-      // Use GSAP for smooth inertia animation with faster decay
+      // Use GSAP for smooth inertia animation
       gsapTween = gsap.to(velocity.value, {
         x: 0,
         y: 0,
-        duration: 1.5, // Reduced from 2 for faster decay
-        ease: "power2.out", // Changed from power3.out for faster response
+        duration: 2,
+        ease: "power3.out",
         onUpdate: () => {
-          targetX += velocity.value.x * 15 // Increased from 10 for faster movement
-          targetY += velocity.value.y * 15
+          targetX += velocity.value.x * 10
+          targetY += velocity.value.y * 10
         },
         onComplete: () => {
           isInertiaActive.value = false
@@ -127,7 +117,7 @@ export const useGallery = () => {
   const handleWheel = (event) => {
     event.preventDefault()
     
-    const sensitivity = 1.5 // Increased from 1.2 for faster wheel scrolling
+    const sensitivity = 1.2
     let deltaX = event.deltaX * sensitivity
     let deltaY = event.deltaY * sensitivity
 
@@ -152,8 +142,8 @@ export const useGallery = () => {
     // Apply slight inertia after wheel stops
     clearTimeout(inertiaTimeout)
     inertiaTimeout = setTimeout(() => {
-      velocity.value.x = -deltaX * 0.15 // Increased from 0.1
-      velocity.value.y = -deltaY * 0.15
+      velocity.value.x = -deltaX * 0.1
+      velocity.value.y = -deltaY * 0.1
       applyInertia()
     }, config.inertiaDelay)
   }
@@ -180,12 +170,12 @@ export const useGallery = () => {
       const deltaX = event.clientX - lastMouseX
       const deltaY = event.clientY - lastMouseY
       
-      targetX += deltaX * 2.5 // Increased from 2 for faster mouse dragging
-      targetY += deltaY * 2.5
+      targetX += deltaX * 2
+      targetY += deltaY * 2
       
       // Update velocity for smooth inertia
-      velocity.value.x = deltaX * 0.8 // Increased from 0.5
-      velocity.value.y = deltaY * 0.8
+      velocity.value.x = deltaX * 0.5
+      velocity.value.y = deltaY * 0.5
       
       lastMouseX = event.clientX
       lastMouseY = event.clientY
@@ -202,7 +192,7 @@ export const useGallery = () => {
     }
   }
 
-  // Touch controls with enhanced momentum - Optimized for mobile speed
+  // Touch controls with enhanced momentum
   const handleTouchStart = (event) => {
     if (event.touches.length === 1) {
       lastTouchX = event.touches[0].clientX
@@ -213,9 +203,6 @@ export const useGallery = () => {
         gsapTween.kill()
         isInertiaActive.value = false
       }
-      
-      // Prevent default to avoid conflicts
-      event.preventDefault()
     }
   }
 
@@ -225,17 +212,12 @@ export const useGallery = () => {
       const deltaX = event.touches[0].clientX - lastTouchX
       const deltaY = event.touches[0].clientY - lastTouchY
       
-      // Mobile-specific optimizations
-      const mobileMultiplier = isMobile() ? config.touchMultiplier * 1.5 : config.touchMultiplier
+      targetX += deltaX * 2
+      targetY += deltaY * 2
       
-      // Increased touch sensitivity for faster mobile scrolling
-      targetX += deltaX * mobileMultiplier
-      targetY += deltaY * mobileMultiplier
-      
-      // Update velocity for smooth inertia with higher sensitivity
-      const velocityMultiplier = isMobile() ? 2.0 : 1.2
-      velocity.value.x = deltaX * velocityMultiplier
-      velocity.value.y = deltaY * velocityMultiplier
+      // Update velocity for smooth inertia
+      velocity.value.x = deltaX * 0.5
+      velocity.value.y = deltaY * 0.5
       
       lastTouchX = event.touches[0].clientX
       lastTouchY = event.touches[0].clientY
@@ -245,7 +227,7 @@ export const useGallery = () => {
   }
 
   const handleTouchEnd = () => {
-    // Apply inertia after touch release with faster response
+    // Apply inertia after touch release
     applyInertia()
   }
 

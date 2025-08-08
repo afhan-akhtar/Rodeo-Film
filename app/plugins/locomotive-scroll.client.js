@@ -21,28 +21,28 @@ export default defineNuxtPlugin(() => {
       scrollFromAnywhere: false,
       lerp: 0.03, // Ultra-smooth movement (0.01-0.1)
       reloadOnContextChange: true,
-      touchMultiplier: 3.0, // Enhanced mobile touch response
-      firefoxMultiplier: 60, // Better Firefox support
+      touchMultiplier: 4.0, // Increased for faster mobile touch response
+      firefoxMultiplier: 80, // Increased for better Firefox support
       gestureDirection: 'vertical',
       // Enhanced momentum scrolling
-      momentum: 0.8,
+      momentum: 0.9, // Increased for faster momentum
       // Improved easing functions
       easing: [0.25, 0.46, 0.45, 0.94],
       tablet: {
         smooth: true,
         direction: 'vertical',
         horizontalGesture: false,
-        touchMultiplier: 3.2,
+        touchMultiplier: 4.5, // Increased for faster tablet response
         breakpoint: 1024,
-        lerp: 0.04,
+        lerp: 0.06, // Increased for faster response
       },
       smartphone: {
         smooth: true,
         direction: 'vertical',
         horizontalGesture: false,
-        touchMultiplier: 3.5,
+        touchMultiplier: 5.0, // Increased for faster smartphone response
         breakpoint: 768,
-        lerp: 0.05,
+        lerp: 0.08, // Increased for faster response
       }
     })
 

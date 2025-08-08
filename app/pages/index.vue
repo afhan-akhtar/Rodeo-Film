@@ -1945,7 +1945,7 @@ onBeforeUnmount(() => {
   .showcase-container {
     /* Enhanced mobile performance */
     -webkit-overflow-scrolling: touch;
-    touch-action: none;
+    touch-action: pan-x pan-y; /* Allow touch scrolling */
   }
 }
 

@@ -49,7 +49,7 @@
           cursor: isDragging ? 'grabbing' : 'grab'
         }"
       >
-        <!-- Grid Project Showcases - Scroll-based infinite display -->
+        <!-- Lightweight Viewport-Based Grid (Rodeo.film approach) -->
         <div 
           v-for="project in visibleProjects" 
           :key="`showcase-${project.id}-${project.gridX}-${project.gridY}`"
@@ -60,9 +60,9 @@
           @mousemove="handleEnhancedHover($event, project)"
           @click="handleProjectClick($event, project)"
         >
-          <!-- Background Image/Video -->
+          <!-- Optimized Media Loading -->
           <div class="relative w-full h-full overflow-hidden group grid-content">
-            <!-- Conditional rendering for video or image with lazy loading -->
+            <!-- Smart loading for visible projects only -->
             <video
               v-if="project.mediaType === 'video'"
               :poster="project.poster"
@@ -70,6 +70,7 @@
               muted
               loop
               playsinline
+              preload="metadata"
               :ref="el => setVideoRef(el, project)"
             >
               <source :src="project.video" type="video/mp4">
@@ -80,6 +81,8 @@
               v-else
               :src="getCurrentImageSrc(project)"
               :alt="project.showcase_title"
+              loading="lazy"
+              decoding="async"
               class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             
@@ -605,9 +608,9 @@
       </div>
     </Transition>
 
-    <!-- Navigation Instructions -->
-    <!-- <div class="fixed bottom-6 left-6 z-40 text-white/50 text-sm font-medium tracking-wide">
-      Drag or scroll to explore
+    <!-- Infinite Scroll Indicator -->
+    <!-- <div class="fixed bottom-6 left-6 z-40 text-white/50 text-xs font-medium tracking-wide">
+      Infinite Grid • Position: {{ Math.round(-scrollX / 100) }}, {{ Math.round(-scrollY / 100) }}
     </div> -->
 
     <!-- Scroll to Top Button -->
@@ -1195,9 +1198,9 @@ const getGridPosition = (gridX, gridY) => {
   const itemWidth = baseWidth * scale
   const itemHeight = baseHeight * scale
   
-  // Square grid tessellation calculations with tighter spacing to prevent gaps
+  // Square grid tessellation calculations
   // For squares, horizontal and vertical spacing are equal to the width
-  const spacing = itemWidth * 0.85 // Tighter spacing to prevent black gaps
+  const spacing = itemWidth * 0.9 // Reasonable spacing for simple grid
   
   return {
     position: 'absolute',
@@ -1519,92 +1522,131 @@ const playlists = [
   }
 ]
 
-// Scroll-based infinite showcase system
+// Lightweight infinite grid - only render what's visible
 const visibleProjects = ref([])
-const projectCache = new Map() // Cache for created projects
-const lastScrollX = ref(0)
-const lastScrollY = ref(0)
-const viewportBuffer = 2 // Number of grid cells beyond viewport to render - reduced for better performance
+const projectDataCache = new Map()
 
-// Calculate which projects should be visible based on scroll position
-const updateVisibleProjects = () => {
+// Generate infinite repeating projects grid
+const generateViewportProjects = () => {
   const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
   const itemWidth = 350 * scale
-  const spacing = itemWidth * 0.85 // Match the spacing from getGridPosition
+  const spacing = itemWidth * 0.9
   
-  // Calculate viewport bounds with larger buffer to prevent gaps during fast scrolling
-  const buffer = spacing * (viewportBuffer + 2) // Increased buffer for better coverage
+  // Calculate viewport bounds with large buffer for instant loading
+  const buffer = spacing * 8 // Much larger buffer to preload content and prevent delays
   const viewportLeft = -scrollX.value - buffer
   const viewportRight = -scrollX.value + clientWidth.value + buffer
   const viewportTop = -scrollY.value - buffer
   const viewportBottom = -scrollY.value + clientHeight.value + buffer
   
-  // Calculate grid range needed to cover viewport
+  // Calculate which grid positions are needed (infinite in all directions)
   const startX = Math.floor(viewportLeft / spacing)
   const endX = Math.ceil(viewportRight / spacing)
   const startY = Math.floor(viewportTop / spacing)
   const endY = Math.ceil(viewportBottom / spacing)
   
   const newVisibleProjects = []
-  const maxProjects = 150 // Increased limit for better coverage
   
-  // Generate projects for visible grid area
-  for (let x = startX; x <= endX && newVisibleProjects.length < maxProjects; x++) {
-    for (let y = startY; y <= endY && newVisibleProjects.length < maxProjects; y++) {
+  // Generate infinite repeating grid - no bounds, endless content
+  for (let x = startX; x <= endX; x++) {
+    for (let y = startY; y <= endY; y++) {
       const projectKey = `${x}-${y}`
       
-      // Check if project already exists in cache
-      if (projectCache.has(projectKey)) {
-        newVisibleProjects.push(projectCache.get(projectKey))
+      // Check cache first
+      if (projectDataCache.has(projectKey)) {
+        newVisibleProjects.push(projectDataCache.get(projectKey))
       } else {
-        // Create new project for this grid position with better distribution
-        const projectIndex = Math.abs((x * 5 + y * 11 + (x * y) * 3) % projects.length)
+        // Create infinite repeating pattern using modulo
+        // This ensures the pattern repeats seamlessly in all directions
+        const projectIndex = Math.abs((x * 7 + y * 13 + (x * y) * 3) % projects.length)
         const project = projects[projectIndex]
         
         const newProject = {
           ...project,
           gridX: x,
           gridY: y,
-          id: `${project.id}-${x}-${y}`
+          id: `${project.id}-${x}-${y}`,
+          shouldLoad: true,
+          // Add infinite scroll metadata
+          isInfinite: true,
+          patternId: `${Math.abs(x % 10)}-${Math.abs(y % 10)}` // 10x10 repeating pattern
         }
         
-        // Cache the project
-        projectCache.set(projectKey, newProject)
+        // Cache for future use
+        projectDataCache.set(projectKey, newProject)
         newVisibleProjects.push(newProject)
       }
     }
   }
   
+  console.log(`Rendering ${newVisibleProjects.length} infinite projects at scroll position (${Math.round(-scrollX.value)}, ${Math.round(-scrollY.value)})`)
   visibleProjects.value = newVisibleProjects
 }
 
-// Throttled scroll update function
-let scrollUpdateTimeout = null
-const throttledUpdateVisibleProjects = () => {
-  if (scrollUpdateTimeout) {
-    clearTimeout(scrollUpdateTimeout)
+// Immediate viewport-based generation for instant loading
+let updateTimeout = null
+const immediateProjectUpdate = () => {
+  // For fast scrolling, update immediately without any delay
+  if (Math.abs(scrollVelocity.x) > 1000 || Math.abs(scrollVelocity.y) > 1000) {
+    generateViewportProjects() // Instant update for fast scrolling
+    return
   }
-  scrollUpdateTimeout = setTimeout(() => {
-    updateVisibleProjects()
-  }, 8) // More responsive updates to prevent gaps
+  
+  // For slower scrolling, use minimal delay
+  if (updateTimeout) {
+    clearTimeout(updateTimeout)
+  }
+  updateTimeout = setTimeout(() => {
+    generateViewportProjects()
+  }, 8) // 8ms = 120fps updates
 }
 
-// Watch for scroll changes to update visible projects
-watch([scrollX, scrollY], ([newScrollX, newScrollY]) => {
-  // Only update if scroll has changed significantly
-  const scrollThreshold = 30 // Reduced threshold for more responsive updates
-  if (Math.abs(newScrollX - lastScrollX.value) > scrollThreshold || 
-      Math.abs(newScrollY - lastScrollY.value) > scrollThreshold) {
-    lastScrollX.value = newScrollX
-    lastScrollY.value = newScrollY
-    throttledUpdateVisibleProjects()
-  }
-}, { flush: 'post' })
+// Predictive loading based on scroll direction and velocity
+let lastScrollTime = 0
+let scrollVelocity = { x: 0, y: 0 }
+let lastScrollPos = { x: 0, y: 0 }
 
-// Watch for viewport size changes
-watch([clientWidth, clientHeight], () => {
-  updateVisibleProjects()
-}, { flush: 'post' })
+const updateScrollVelocity = () => {
+  const currentTime = Date.now()
+  const deltaTime = currentTime - lastScrollTime
+  
+  if (deltaTime > 0) {
+    scrollVelocity.x = (scrollX.value - lastScrollPos.x) / deltaTime * 1000 // pixels per second
+    scrollVelocity.y = (scrollY.value - lastScrollPos.y) / deltaTime * 1000
+  }
+  
+  lastScrollTime = currentTime
+  lastScrollPos.x = scrollX.value
+  lastScrollPos.y = scrollY.value
+}
+
+// Intelligent cache cleanup for infinite scrolling
+const cleanupCache = () => {
+  if (projectDataCache.size > 1200) { // Larger cache for better performance
+    // Calculate current viewport center for smart cleanup
+    const currentCenterX = Math.round(-scrollX.value / (350 * Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2 * 0.9))
+    const currentCenterY = Math.round(-scrollY.value / (350 * Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2 * 0.9))
+    
+    // Keep projects that are close to current position
+    const keepDistance = 20 // Keep projects within 20 grid units
+    const entriesToKeep = []
+    
+    projectDataCache.forEach((project, key) => {
+      const distance = Math.abs(project.gridX - currentCenterX) + Math.abs(project.gridY - currentCenterY)
+      if (distance <= keepDistance) {
+        entriesToKeep.push([key, project])
+      }
+    })
+    
+    // Clear cache and restore nearby projects
+    projectDataCache.clear()
+    entriesToKeep.forEach(([key, project]) => {
+      projectDataCache.set(key, project)
+    })
+    
+    console.log(`Cache cleaned: kept ${entriesToKeep.length} nearby projects`)
+  }
+}
 
 // Enhanced keyboard controls using gallery
 const handleKeyDown = (event) => {
@@ -1617,8 +1659,8 @@ onMounted(async () => {
     clientWidth.value = window.innerWidth
     clientHeight.value = window.innerHeight
     
-    // Initialize visible projects
-    updateVisibleProjects()
+    // Generate initial viewport projects
+    generateViewportProjects()
     
     // Add keyboard event listener
     window.addEventListener('keydown', handleKeyDown)
@@ -1627,6 +1669,8 @@ onMounted(async () => {
     const handleResize = () => {
       clientWidth.value = window.innerWidth
       clientHeight.value = window.innerHeight
+      // Regenerate viewport projects for new size
+      generateViewportProjects()
     }
     window.addEventListener('resize', handleResize)
     
@@ -1647,6 +1691,23 @@ onMounted(async () => {
     window._resizeHandler = handleResize
     window._scrollHandler = handleScroll
     window._mouseMoveHandler = handleMouseMove
+    
+    // Set up scroll callback for instant updates during interaction
+    gallery.setScrollStartCallback(() => {
+      // Immediate update when user starts scrolling
+      generateViewportProjects()
+    })
+    
+    // Set up immediate scroll watchers for instant loading
+    watch([scrollX, scrollY], () => {
+      updateScrollVelocity()
+      immediateProjectUpdate()
+      
+      // Less frequent cache cleanup to avoid performance hits
+      if (Math.random() < 0.1) { // Only cleanup 10% of the time
+        cleanupCache()
+      }
+    }, { flush: 'post' })
     
     // Initialize GSAP gallery functionality
     await gallery.initializeGallery()
@@ -1678,14 +1739,12 @@ onBeforeUnmount(() => {
     videoDebounceTimers.forEach(timer => clearTimeout(timer))
     videoDebounceTimers.clear()
     
-    // Clear project cache
-    projectCache.clear()
+    // Clear projects and cache
     visibleProjects.value = []
-    
-    // Clear scroll update timeout
-    if (scrollUpdateTimeout) {
-      clearTimeout(scrollUpdateTimeout)
-      scrollUpdateTimeout = null
+    projectDataCache.clear()
+    if (updateTimeout) {
+      clearTimeout(updateTimeout)
+      updateTimeout = null
     }
     
     // Cleanup GSAP gallery
@@ -1723,7 +1782,7 @@ onBeforeUnmount(() => {
   will-change: transform;
   transition: transform 0.1s linear;
   /* Ensure proper coverage to prevent black showing through */
-  background: transparent;
+  background: rgba(0, 0, 0, 0.98);
   transform-style: preserve-3d;
   backface-visibility: hidden;
 }
@@ -1752,10 +1811,11 @@ onBeforeUnmount(() => {
   backface-visibility: hidden;
   /* Perfect square aspect ratio for large cells */
   aspect-ratio: 1;
-  /* Optimized properties for better performance */
+  /* Lightweight performance optimizations */
   will-change: transform;
+  contain: layout style paint;
   /* Enhanced border to prevent black showing through */
-  border: 2px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 
     0 0 20px rgba(255, 255, 255, 0.02),
     inset 0 0 20px rgba(255, 255, 255, 0.01);
@@ -2259,5 +2319,20 @@ h1 {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   font-weight: 900;
   line-height: 0.8;
+}
+
+/* Lightweight Grid Optimizations */
+.project-grid-item img,
+.project-grid-item video {
+  /* Optimize media loading */
+  image-rendering: optimizeSpeed;
+  transform: translateZ(0);
+}
+
+/* Reduce motion for better performance */
+@media (prefers-reduced-motion: reduce) {
+  .project-grid-item {
+    transition: none;
+  }
 }
 </style> 

@@ -77,27 +77,8 @@ export const useGallery = () => {
     scrollX.value += deltaX
     scrollY.value += deltaY
 
-    // Optimized boundary handling with reduced computational load
-    if (scrollX.value < config.boundaries.minX) {
-      const overflow = config.boundaries.minX - scrollX.value
-      scrollX.value += overflow * 0.08
-      targetX += overflow * 0.04
-    }
-    if (scrollX.value > config.boundaries.maxX) {
-      const overflow = scrollX.value - config.boundaries.maxX
-      scrollX.value -= overflow * 0.08
-      targetX -= overflow * 0.04
-    }
-    if (scrollY.value < config.boundaries.minY) {
-      const overflow = config.boundaries.minY - scrollY.value
-      scrollY.value += overflow * 0.08
-      targetY += overflow * 0.04
-    }
-    if (scrollY.value > config.boundaries.maxY) {
-      const overflow = scrollY.value - config.boundaries.maxY
-      scrollY.value -= overflow * 0.08
-      targetY -= overflow * 0.04
-    }
+    // No boundaries - allow infinite scrolling in all directions
+    // Remove all boundary restrictions for truly endless content
 
     // Continue animation only if significant movement
     if (Math.abs(deltaX) > 0.001 || Math.abs(deltaY) > 0.001) {
@@ -162,9 +143,15 @@ export const useGallery = () => {
   // Ultra-smooth trackpad scrolling
   let currentTrackpadSpeed = { x: 0, y: 0 }
   let lastTrackpadTime = 0
+  let onScrollStartCallback = null
   
   const handleWheel = (event) => {
     event.preventDefault()
+    
+    // Trigger scroll start callback immediately on any wheel event
+    if (onScrollStartCallback) {
+      onScrollStartCallback()
+    }
     
     // Simplified wheel handling for better performance
     const isTrackpad = Math.abs(event.deltaY) < 50 && Math.abs(event.deltaX) < 50
@@ -240,6 +227,11 @@ export const useGallery = () => {
   // Mouse drag controls with enhanced momentum
   const handleMouseDown = (event) => {
     if (event.button === 0) {
+      // Trigger scroll start callback on first interaction
+      if (onScrollStartCallback) {
+        onScrollStartCallback()
+      }
+      
       isDragging.value = true
       lastMouseX = event.clientX
       lastMouseY = event.clientY
@@ -293,6 +285,11 @@ export const useGallery = () => {
   // Touch controls with enhanced momentum
   const handleTouchStart = (event) => {
     if (event.touches.length === 1) {
+      // Trigger scroll start callback on first touch interaction
+      if (onScrollStartCallback) {
+        onScrollStartCallback()
+      }
+      
       lastTouchX = event.touches[0].clientX
       lastTouchY = event.touches[0].clientY
       
@@ -874,6 +871,11 @@ export const useGallery = () => {
     // Note: animatePageEnter is called manually from onLoadingComplete for immediate response
   }
 
+  // Set callback function for scroll start detection
+  const setScrollStartCallback = (callback) => {
+    onScrollStartCallback = callback
+  }
+
   return {
     // Reactive state
     scrollX,
@@ -907,6 +909,9 @@ export const useGallery = () => {
     scrollTo,
     scrollToTop,
     scrollToElement,
+    
+    // Callback setters
+    setScrollStartCallback,
     
     // Lifecycle
     initializeGallery,

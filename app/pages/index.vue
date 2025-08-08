@@ -1275,31 +1275,31 @@ const getGridPosition = (gridX, gridY) => {
 
 // Project data matching real rodeo.film style
 const projects = [
-  {
-    id: 1,
-    showcase_title: 'BENOIT',
-    client: 'Netflix',
-    category: 'Series',
-    director: 'Gabriel Dugué',
-    mediaType: 'video',
-    video: 'https://rodeo.film/media/site/f0bdc32d47-1717166278/ap.mp4',
-    poster: 'https://rodeo.film/media/site/ac2caafa79-1670507066/13.jpg'
-  },
-  {
-    id: 2,
-    showcase_title: 'BOU',
-    client: 'Arte',
-    category: 'Documentary',
-    director: 'Hugo Kerr',
-    mediaType: 'image',
-    image: 'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
-    images: [
-      'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
-      'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90',
-      'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90',
-      'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90'
-    ]
-  },
+  // {
+  //   id: 1,
+  //   showcase_title: 'BENOIT',
+  //   client: 'Netflix',
+  //   category: 'Series',
+  //   director: 'Gabriel Dugué',
+  //   mediaType: 'video',
+  //   video: 'https://rodeo.film/media/site/f0bdc32d47-1717166278/ap.mp4',
+  //   poster: 'https://rodeo.film/media/site/ac2caafa79-1670507066/13.jpg'
+  // },
+  // {
+  //   id: 2,
+  //   showcase_title: 'BOU',
+  //   client: 'Arte',
+  //   category: 'Documentary',
+  //   director: 'Hugo Kerr',
+  //   mediaType: 'image',
+  //   image: 'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
+  //   images: [
+  //     'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
+  //     'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90',
+  //     'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90',
+  //     'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90'
+  //   ]
+  // },
   {
     id: 3,
     showcase_title: 'LA CIBLE',
@@ -1326,23 +1326,23 @@ const projects = [
       'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90',
       'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&h=1080&fit=crop&q=90',
       'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90',
-      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90'
+      
     ]
   },
-  {
-    id: 5,
-    showcase_title: 'VISION',
-    client: 'Apple',
-    category: 'Product Film',
-    director: 'Claire Martin',
-    mediaType: 'image',
-    image: 'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90',
-    images: [
-      'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90',
-      'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
-      'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90'
-    ]
-  },
+  // {
+  //   id: 5,
+  //   showcase_title: 'VISION',
+  //   client: 'Apple',
+  //   category: 'Product Film',
+  //   director: 'Claire Martin',
+  //   mediaType: 'image',
+  //   image: 'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90',
+  //   images: [
+  //     'https://images.unsplash.com/photo-1592478411213-6153e4ebc696?w=1920&h=1080&fit=crop&q=90',
+  //     'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
+  //     'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=1920&h=1080&fit=crop&q=90'
+  //   ]
+  // },
   {
     id: 6,
     showcase_title: 'ECHOES',
@@ -1365,9 +1365,9 @@ const projects = [
     category: 'Sports Film',
     director: 'Sofia Chen',
     mediaType: 'image',
-    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90',
+    image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90',
     images: [
-      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90',
+      
       'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90',
       'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&h=1080&fit=crop&q=90'
     ]
@@ -1382,7 +1382,7 @@ const projects = [
     image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90',
     images: [
       'https://images.unsplash.com/photo-1563720223185-11003d516935?w=1920&h=1080&fit=crop&q=90',
-      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop&q=90',
+      
       'https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=1920&h=1080&fit=crop&q=90',
       'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1920&h=1080&fit=crop&q=90'
     ]

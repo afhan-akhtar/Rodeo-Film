@@ -8,7 +8,7 @@
       @complete="onLoadingComplete"
     />
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 p-6 lg:p-8">
+    <nav class="fixed top-0 left-0 right-0 z-50 p-8">
       <div class="flex justify-between items-center">
         <!-- Logo -->
         <svg width="160" height="53" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
@@ -22,7 +22,7 @@
         </svg>
         
         <!-- Hamburger Menu -->
-        <button v-if="!projectsOpen && !currentPlayingProject && !awardsOpen && !playlistOpen && !aboutOpen && !galleryOpen" class="hamburger-menu p-2" @click="toggleMenu">
+        <button v-if="!projectsOpen && !currentPlayingProject && !awardsOpen && !playlistOpen && !aboutOpen && !galleryOpen" class="hamburger-menu p-3" @click="toggleMenu">
           <div class="w-6 h-0.5 bg-white mb-1.5 transition-all duration-300"></div>
           <div class="w-6 h-0.5 bg-white mb-1.5 transition-all duration-300"></div>
           <div class="w-6 h-0.5 bg-white transition-all duration-300"></div>
@@ -174,7 +174,7 @@
     </section>
 
     <!-- Scroll Controls Component -->
-    <ScrollControls />
+    <!-- <ScrollControls /> -->
 
     <!-- Rodeo Film Style Footer -->
     <footer id="js-footer" class="o-footer" data-scroll data-scroll-class="fade-in" data-scroll-delay="0.1">
@@ -216,7 +216,7 @@
         </div>
         
         <!-- Close Button -->
-        <button @click="toggleMenu"  class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200">
+        <button @click="toggleMenu"  class="absolute top-8 right-8 p-3 z-50 hover:scale-110 transition-transform duration-200">
           <div class="relative w-6 h-6">
             <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
             <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform -rotate-45 -translate-y-0.5"></div>
@@ -289,7 +289,7 @@
 <button 
   v-if="projectsOpen"
   @click="closeProjects" 
-  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+  class="fixed top-8 right-8 p-3 z-50 hover:scale-110 transition-transform duration-200"
 >
   <div class="relative w-6 h-6">
     <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
@@ -364,7 +364,7 @@
 <button 
   v-if="awardsOpen"
   @click="closeAwards" 
-  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+  class="fixed top-8 right-8 p-3 z-50 hover:scale-110 transition-transform duration-200"
 >
   <div class="relative w-6 h-6">
     <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
@@ -421,7 +421,7 @@
 <button 
   v-if="galleryOpen"
   @click="closeGallery" 
-  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+  class="fixed top-8 right-8 p-3 z-50 hover:scale-110 transition-transform duration-200"
 >
   <div class="relative w-6 h-6">
     <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
@@ -499,7 +499,7 @@
 <button 
   v-if="playlistOpen"
   @click="closePlaylist" 
-  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+  class="fixed top-8 right-8 p-3 z-50 hover:scale-110 transition-transform duration-200"
 >
   <div class="relative w-6 h-6">
     <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
@@ -572,7 +572,7 @@
 <button 
   v-if="aboutOpen"
   @click="closeAbout" 
-  class="fixed top-6 right-6 lg:top-8 lg:right-8 p-2 z-50 hover:scale-110 transition-transform duration-200"
+  class="fixed top-8 right-8 p-3 z-50 hover:scale-110 transition-transform duration-200"
 >
   <div class="relative w-6 h-6">
     <div class="absolute top-1/2 left-0 w-6 h-0.5 bg-white transform rotate-45 -translate-y-0.5"></div>
@@ -614,7 +614,7 @@
         </div>
         
         <!-- Close Button -->
-        <button @click="closeFullVideo" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2">
+        <button @click="closeFullVideo" class="absolute top-8 right-8 p-3">
           <div class="w-6 h-0.5 bg-white transform rotate-45 absolute"></div>
           <div class="w-6 h-0.5 bg-white transform -rotate-45"></div>
         </button>
@@ -655,7 +655,7 @@
         </div>
         
         <!-- Close Button -->
-        <button @click="closeFullscreenVideo" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-2 hover:scale-110 transition-transform">
+        <button @click="closeFullscreenVideo" class="absolute top-8 right-8 p-3 hover:scale-110 transition-transform">
           <div class="w-6 h-0.5 bg-white transform rotate-45 absolute"></div>
           <div class="w-6 h-0.5 bg-white transform -rotate-45"></div>
         </button>
@@ -827,16 +827,9 @@ const getGalleryItemStyle = (index) => {
   const baseY = 150 + (index * 40)
   const baseZ = index * -30 // Negative Z for depth
   
-  // Adjust for viewport size
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
-  
-  // Scale positioning based on viewport
-  const scaleX = viewportWidth / 1200
-  const scaleY = viewportHeight / 800
-  
-  const adjustedX = baseX * scaleX
-  const adjustedY = baseY * scaleY
+  // Use consistent large positioning across all devices
+  const adjustedX = baseX
+  const adjustedY = baseY
   
   return {
     position: 'absolute',
@@ -876,13 +869,9 @@ const handleGalleryItemLeave = (event, index) => {
   const baseY = 150 + (index * 40)
   const baseZ = index * -30
   
-  const viewportWidth = window.innerWidth
-  const viewportHeight = window.innerHeight
-  const scaleX = viewportWidth / 1200
-  const scaleY = viewportHeight / 800
-  
-  const adjustedX = baseX * scaleX
-  const adjustedY = baseY * scaleY
+  // Use consistent large positioning across all devices
+  const adjustedX = baseX
+  const adjustedY = baseY
   
   // Return to original position
   gsap.to(element, {
@@ -1224,7 +1213,7 @@ const clientHeight = ref(1080)
 
 // Function to check if video should be loaded (within viewport + buffer)
 const isVideoInViewport = (project) => {
-  const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
+  const scale = 1.0 // Laptop scale (1920px reference)
   const itemWidth = 350 * scale
   const spacing = itemWidth * 0.9
   
@@ -1254,8 +1243,8 @@ const getGridPosition = (gridX, gridY) => {
   const baseWidth = 350  // Large cells for better visual impact
   const baseHeight = baseWidth // Square aspect ratio
   
-  // Responsive scaling based on viewport
-  const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
+  // Use laptop UI size across all devices
+  const scale = 1.0 // Laptop scale (1920px reference)
   const itemWidth = baseWidth * scale
   const itemHeight = baseHeight * scale
   
@@ -1589,7 +1578,7 @@ const projectDataCache = new Map()
 
 // Generate infinite repeating projects grid
 const generateViewportProjects = () => {
-  const scale = Math.min(clientWidth.value / 1920, clientHeight.value / 1080, 1) * 1.2
+  const scale = 1.0 // Laptop scale (1920px reference)
   const itemWidth = 350 * scale
   const spacing = itemWidth * 0.9
   
@@ -2014,61 +2003,9 @@ onBeforeUnmount(() => {
   color: rgba(255, 255, 255, 1);
 }
 
-/* Mobile responsive footer */
-@media (max-width: 768px) {
-  .o-footer {
-    padding: 15px 20px;
-  }
-  
-  .o-footer .hide-first {
-    gap: 6px;
-    text-align: center;
-  }
-  
-  .o-footer .copy,
-  .o-footer .legas,
-  .o-footer .a-footerText {
-    font-size: 11px;
-  }
-}
+/* Use laptop footer across all devices */
 
-/* Mobile responsive adjustments for large hexagons and performance */
-@media (max-width: 768px) {
-  .showcase-container {
-    /* Enhanced mobile performance */
-    -webkit-overflow-scrolling: touch;
-    touch-action: none;
-  }
-  
-  .project-grid-item {
-    border-width: 1.5px;
-    /* Mobile performance optimizations */
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-  }
-  
-  .project-grid-item h3 {
-    font-size: 0.875rem;
-  }
-  
-  .project-grid-item .text-sm {
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .project-grid-item {
-    border-width: 1px;
-  }
-  
-  .project-grid-item h3 {
-    font-size: 0.75rem;
-  }
-  
-  .project-grid-item .text-sm {
-    font-size: 0.625rem;
-  }
-}
+/* Use laptop UI across all devices - no mobile adjustments */
 
 /* Rodeo Film-style Gallery Overlay */
 .rodeo-gallery-overlay {

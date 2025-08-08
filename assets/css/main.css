@@ -73,11 +73,11 @@
   }
   
   .text-hero {
-    @apply text-4xl md:text-6xl lg:text-7xl font-serif font-bold leading-tight;
+    @apply text-7xl font-serif font-bold leading-tight;
   }
   
   .text-section-title {
-    @apply text-2xl md:text-4xl font-serif font-semibold mb-6;
+    @apply text-4xl font-serif font-semibold mb-6;
   }
 
   /* Animations */
@@ -94,13 +94,13 @@
     @apply inline-block w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin;
   }
 
-  /* Grid Layouts */
+  /* Grid Layouts - Use laptop layout across all devices */
   .projects-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8;
+    @apply grid grid-cols-3 gap-8;
   }
   
   .directors-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+    @apply grid grid-cols-4 gap-6;
   }
 
   /* Hero Section */

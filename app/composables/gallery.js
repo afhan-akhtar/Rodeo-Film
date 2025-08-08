@@ -109,24 +109,34 @@ export const useGallery = () => {
   const initializeLenis = () => {
     if (!process.client) return
 
-    lenisInstance.value = new Lenis({
-      ...config.lenis,
-      wrapper: document.body,
-      content: document.documentElement,
-    })
+    try {
+      lenisInstance.value = new Lenis({
+        ...config.lenis,
+        wrapper: document.body,
+        content: document.documentElement,
+      })
 
-    // Connect Lenis with GSAP ScrollTrigger
-    lenisInstance.value.on('scroll', ScrollTrigger.update)
-    
-    // Add Lenis to GSAP ticker for perfect sync
-    gsap.ticker.add((time) => {
-      lenisInstance.value.raf(time * 1000)
-    })
-    
-    // Disable lag smoothing for better performance
-    gsap.ticker.lagSmoothing(0)
+      // Connect Lenis with GSAP ScrollTrigger
+      if (lenisInstance.value) {
+        lenisInstance.value.on('scroll', ScrollTrigger.update)
+      }
+      
+      // Add Lenis to GSAP ticker for perfect sync
+      gsap.ticker.add((time) => {
+        if (lenisInstance.value) {
+          lenisInstance.value.raf(time * 1000)
+        }
+      })
+      
+      // Disable lag smoothing for better performance
+      gsap.ticker.lagSmoothing(0)
 
-    return lenisInstance.value
+      return lenisInstance.value
+    } catch (error) {
+      console.warn('Failed to initialize Lenis:', error)
+      lenisInstance.value = null
+      return null
+    }
   }
 
   // Start smooth scrolling animation
@@ -825,11 +835,15 @@ export const useGallery = () => {
     
     // Cleanup Lenis
     if (lenisInstance.value) {
-      lenisInstance.value.destroy()
+      try {
+        lenisInstance.value.destroy()
+      } catch (error) {
+        console.warn('Error destroying Lenis instance:', error)
+      }
       lenisInstance.value = null
     }
     
-    // Remove from GSAP ticker
+    // Remove from GSAP ticker and restore lag smoothing
     gsap.ticker.lagSmoothing(250, 16)
   }
 
